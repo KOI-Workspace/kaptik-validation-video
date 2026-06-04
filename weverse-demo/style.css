@@ -70,6 +70,7 @@ body {
 /* 자막 아이템 — 아바타 + 이름 + 텍스트 레이아웃 */
 .subtitle-item {
   display: flex;
+  flex-wrap: wrap;   /* 인라인 카드가 아랫줄로 자연스럽게 이어짐 */
   align-items: flex-start;
   gap: 12px;
   padding: 10px 0;
@@ -123,11 +124,12 @@ body {
 
 /* ── 문화맥락 해설 인라인 카드 ── */
 .context-inline-card {
+  flex-basis: 100%;  /* flex-wrap으로 아바타·텍스트 아랫줄 차지 */
   max-height: 0;
   overflow: hidden;
   opacity: 0;
   transition: max-height 0.32s ease-out, opacity 0.22s ease-out;
-  margin: 0 0 4px 50px; /* 아바타 너비만큼 들여쓰기 */
+  padding-left: 50px; /* 아바타 너비 + gap 만큼 들여쓰기 */
 }
 .context-inline-card.open {
   max-height: 300px;
