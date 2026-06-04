@@ -78,23 +78,52 @@ body {
 
 /* 자막 리스트 (패딩으로 간격) */
 .subtitle-list {
-  padding: 6px 22px 60px;
+  padding: 4px 20px 60px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
 }
 
-/* 자막 아이템 — 모두 동일한 스타일 */
+/* 자막 아이템 — 아바타 + 이름 + 텍스트 레이아웃 */
 .subtitle-item {
-  font-size: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.subtitle-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin-top: 1px;
+}
+
+.subtitle-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.subtitle-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-bottom: 4px;
+}
+
+.subtitle-text {
+  font-size: 15px;
   font-weight: 400;
   line-height: 1.6;
-  color: rgba(255,255,255,0.82);
+  color: rgba(255,255,255,0.88);
   letter-spacing: -0.005em;
-}
-
-.subtitle-item .speaker {
-  font-weight: 600;
 }
 
 .annotated-word {

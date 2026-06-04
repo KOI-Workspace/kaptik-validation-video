@@ -70,6 +70,11 @@ const SPEAKER_COLORS = {
   'j-hope': '#FFE066', 'Jimin': '#FF6B6B', 'V': '#4ECDC4', 'Jungkook': '#5BC8FF',
 };
 
+const SPEAKER_INITIALS = {
+  'RM': 'RM', 'Jin': 'JN', 'Suga': 'SG',
+  'j-hope': 'JH', 'Jimin': 'JM', 'V': 'V', 'Jungkook': 'JK',
+};
+
 // ── DOM ──
 const startBtn         = document.getElementById('startBtn');
 const resetBtn         = document.getElementById('resetBtn');
@@ -228,19 +233,42 @@ function bindAnnotationClicks(el) {
 }
 
 function createSubtitleEl(item) {
-  const p = document.createElement('p');
-  p.className = 'subtitle-item';
-  const text    = item[currentLang] || item.en || '';
-  const speaker = item.speaker || '';
-  let html = '';
-  if (speaker) {
-    const color = SPEAKER_COLORS[speaker] || '#aaa';
-    html += `<span class="speaker" style="color:${color}">${escapeHtml(speaker)}</span>&ensp;`;
-  }
-  html += buildAnnotatedHtml(text);
-  p.innerHTML = html;
-  bindAnnotationClicks(p);
-  return p;
+  const wrapper  = document.createElement('div');
+  wrapper.className = 'subtitle-item';
+
+  const speaker  = item.speaker || '';
+  const color    = SPEAKER_COLORS[speaker]  || '#888888';
+  const initials = SPEAKER_INITIALS[speaker] || speaker.slice(0, 2).toUpperCase();
+  const text     = item[currentLang] || item.en || '';
+
+  // 아바타
+  const avatar = document.createElement('div');
+  avatar.className = 'subtitle-avatar';
+  avatar.textContent = initials;
+  avatar.style.background = color + '22'; // ~13% 투명도
+  avatar.style.border = `1.5px solid ${color}55`;
+  avatar.style.color  = color;
+
+  // 본문 (이름 + 텍스트)
+  const body = document.createElement('div');
+  body.className = 'subtitle-body';
+
+  const nameEl = document.createElement('div');
+  nameEl.className = 'subtitle-name';
+  nameEl.style.color = color;
+  nameEl.textContent = speaker;
+
+  const textEl = document.createElement('div');
+  textEl.className = 'subtitle-text';
+  textEl.innerHTML = buildAnnotatedHtml(text);
+
+  body.appendChild(nameEl);
+  body.appendChild(textEl);
+  wrapper.appendChild(avatar);
+  wrapper.appendChild(body);
+
+  bindAnnotationClicks(wrapper);
+  return wrapper;
 }
 
 // ── 최신 자막을 맨 위에 삽입 (FLIP 슬라이드 다운, 겹침 없음) ──
