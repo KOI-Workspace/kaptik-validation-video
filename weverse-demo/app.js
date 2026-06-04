@@ -531,8 +531,13 @@ function createSubtitleEl(item) {
 
   body.appendChild(nameEl);
   body.appendChild(textEl);
-  wrapper.appendChild(avatar);
-  wrapper.appendChild(body);
+
+  // 아바타+텍스트를 row로 묶고, 카드는 row 아래에 별도 블록으로 추가
+  const row = document.createElement('div');
+  row.className = 'subtitle-row';
+  row.appendChild(avatar);
+  row.appendChild(body);
+  wrapper.appendChild(row);
 
   bindAnnotationClicks(wrapper);
   return wrapper;
