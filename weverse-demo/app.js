@@ -89,7 +89,7 @@ subtitleList.className = 'subtitle-list';
 sheetContent.appendChild(subtitleList);
 
 // ── 바텀 시트 드래그 ──
-let sheetTop     = Math.round(window.innerHeight * 0.45);
+let sheetTop     = 80;
 const MIN_TOP    = 60;
 const MAX_TOP    = () => Math.round(window.innerHeight * 0.75);
 
@@ -243,18 +243,14 @@ function createSubtitleEl(item) {
   return p;
 }
 
-// ── 최신 자막을 맨 위에 삽입 (FLIP 슬라이드 다운) ──
+// ── 최신 자막을 맨 위에 삽입 (FLIP 슬라이드 다운, 겹침 없음) ──
 function prependSubtitle(item) {
   const atTop = sheetContent.scrollTop <= 20;
   const existingEls = [...subtitleList.querySelectorAll('.subtitle-item')];
 
-  // FLIP First: 기존 위치 기록
-  const firstTops = atTop
-    ? existingEls.map(el => el.getBoundingClientRect().top)
-    : [];
-
+  // 새 요소는 항상 투명하게 시작 (겹침 방지)
   const newEl = createSubtitleEl(item);
-  if (!atTop) newEl.style.opacity = '0';
+  newEl.style.opacity = '0';
   subtitleList.insertBefore(newEl, subtitleList.firstChild);
 
   // MAX_HISTORY 초과 제거
@@ -264,26 +260,28 @@ function prependSubtitle(item) {
   }
 
   if (atTop && existingEls.length > 0) {
-    // FLIP Last: 새 위치 기록 후 역변환
-    const lastTops = existingEls.map(el =>
-      el.parentElement ? el.getBoundingClientRect().top : null
-    );
-    existingEls.forEach((el, i) => {
-      if (!el.parentElement || lastTops[i] === null) return;
-      const delta = firstTops[i] - lastTops[i];
-      if (Math.abs(delta) < 0.5) return;
+    // FLIP: 삽입 전 위치를 기억할 수 없으므로,
+    // 기존 요소들이 실제로 이동한 양(새 요소 높이)만큼 역변환 후 슬라이드
+    const newElH = newEl.getBoundingClientRect().height;
+
+    existingEls.forEach(el => {
+      if (!el.parentElement) return;
       el.style.transition = 'none';
-      el.style.transform  = `translateY(${delta}px)`;
+      el.style.transform  = `translateY(${-newElH}px)`;
     });
 
-    // FLIP Play: 슬라이드 다운
+    // 다음 프레임: 역변환 해제 → 슬라이드 다운 + 새 요소 페이드인
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
+        const DURATION = '0.32s';
         existingEls.forEach(el => {
           if (!el.parentElement) return;
-          el.style.transition = 'transform 0.3s ease-out';
+          el.style.transition = `transform ${DURATION} ease-out`;
           el.style.transform  = '';
         });
+        // 슬라이드 완료 타이밍에 새 요소 페이드인
+        newEl.style.transition = `opacity 0.2s ease-out 0.12s`;
+        newEl.style.opacity    = '1';
       });
     });
 
@@ -293,9 +291,9 @@ function prependSubtitle(item) {
         el.style.transition = '';
         el.style.transform  = '';
       });
-    }, 340);
-  } else if (!atTop) {
-    // 스크롤 중이면 그냥 페이드인
+    }, 360);
+  } else {
+    // 스크롤 중이면 조용히 페이드인
     requestAnimationFrame(() => {
       newEl.style.transition = 'opacity 0.2s';
       newEl.style.opacity    = '1';
