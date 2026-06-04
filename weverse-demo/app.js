@@ -232,24 +232,26 @@ function bindAnnotationClicks(el) {
   });
 }
 
-function createSubtitleEl(item) {
+function createSubtitleEl(item, hideSpeaker = false) {
   const wrapper  = document.createElement('div');
   wrapper.className = 'subtitle-item';
+  wrapper.dataset.speaker = item.speaker || '';
 
   const speaker  = item.speaker || '';
   const color    = SPEAKER_COLORS[speaker]  || '#888888';
   const initials = SPEAKER_INITIALS[speaker] || speaker.slice(0, 2).toUpperCase();
   const text     = item[currentLang] || item.en || '';
 
-  // 아바타
+  // 아바타 (같은 화자 연속이면 보이지 않게)
   const avatar = document.createElement('div');
   avatar.className = 'subtitle-avatar';
   avatar.textContent = initials;
-  avatar.style.background = color + '22'; // ~13% 투명도
+  avatar.style.background = color + '22';
   avatar.style.border = `1.5px solid ${color}55`;
   avatar.style.color  = color;
+  if (hideSpeaker) avatar.style.opacity = '0';
 
-  // 본문 (이름 + 텍스트)
+  // 본문
   const body = document.createElement('div');
   body.className = 'subtitle-body';
 
@@ -257,6 +259,7 @@ function createSubtitleEl(item) {
   nameEl.className = 'subtitle-name';
   nameEl.style.color = color;
   nameEl.textContent = speaker;
+  if (hideSpeaker) nameEl.style.display = 'none';
 
   const textEl = document.createElement('div');
   textEl.className = 'subtitle-text';
@@ -271,15 +274,33 @@ function createSubtitleEl(item) {
   return wrapper;
 }
 
+/** 기존 첫 번째 항목이 같은 화자면 이름/아바타 숨기기 */
+function hideSpeakerHeaderOf(el) {
+  if (!el) return;
+  const avatar = el.querySelector('.subtitle-avatar');
+  const name   = el.querySelector('.subtitle-name');
+  if (avatar) avatar.style.opacity = '0';
+  if (name)   name.style.display   = 'none';
+}
+
 // ── 최신 자막을 맨 위에 삽입 (FLIP 슬라이드 다운, 겹침 없음) ──
 function prependSubtitle(item) {
   const atTop = sheetContent.scrollTop <= 20;
   const existingEls = [...subtitleList.querySelectorAll('.subtitle-item')];
 
-  // 새 요소는 항상 투명하게 시작 (겹침 방지)
+  // Step 1: 삽입 전 위치 기록
+  const firstTops = atTop ? existingEls.map(el => el.getBoundingClientRect().top) : [];
+
+  // Step 2: 새 요소 삽입 (항상 투명하게 시작)
   const newEl = createSubtitleEl(item);
   newEl.style.opacity = '0';
   subtitleList.insertBefore(newEl, subtitleList.firstChild);
+
+  // Step 3: 같은 화자 연속이면 이전 첫 번째 항목의 이름/아바타 숨김
+  const prevFirst = existingEls[0];
+  if (prevFirst && prevFirst.dataset.speaker === item.speaker) {
+    hideSpeakerHeaderOf(prevFirst);
+  }
 
   // MAX_HISTORY 초과 제거
   const allItems = subtitleList.querySelectorAll('.subtitle-item');
@@ -288,27 +309,27 @@ function prependSubtitle(item) {
   }
 
   if (atTop && existingEls.length > 0) {
-    // FLIP: 삽입 전 위치를 기억할 수 없으므로,
-    // 기존 요소들이 실제로 이동한 양(새 요소 높이)만큼 역변환 후 슬라이드
-    const newElH = newEl.getBoundingClientRect().height;
+    // FLIP: 삽입+이름숨김 후 실제 이동한 만큼 역변환
+    const lastTops = existingEls.map(el =>
+      el.parentElement ? el.getBoundingClientRect().top : null
+    );
 
-    existingEls.forEach(el => {
-      if (!el.parentElement) return;
+    existingEls.forEach((el, i) => {
+      if (!el.parentElement || lastTops[i] === null) return;
+      const delta = firstTops[i] - lastTops[i];
+      if (Math.abs(delta) < 0.5) return;
       el.style.transition = 'none';
-      el.style.transform  = `translateY(${-newElH}px)`;
+      el.style.transform  = `translateY(${delta}px)`;
     });
 
-    // 다음 프레임: 역변환 해제 → 슬라이드 다운 + 새 요소 페이드인
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        const DURATION = '0.32s';
         existingEls.forEach(el => {
           if (!el.parentElement) return;
-          el.style.transition = `transform ${DURATION} ease-out`;
+          el.style.transition = 'transform 0.32s ease-out';
           el.style.transform  = '';
         });
-        // 슬라이드 완료 타이밍에 새 요소 페이드인
-        newEl.style.transition = `opacity 0.2s ease-out 0.12s`;
+        newEl.style.transition = 'opacity 0.2s ease-out 0.12s';
         newEl.style.opacity    = '1';
       });
     });
@@ -332,8 +353,12 @@ function prependSubtitle(item) {
 // ── 전체 재렌더 (언어 변경 시) ──
 function rerenderAll() {
   subtitleList.innerHTML = '';
-  [...history].reverse().forEach(item => {
-    const el = createSubtitleEl(item);
+  const reversed = [...history].reverse();
+  reversed.forEach((item, i) => {
+    // 바로 위 항목(더 최신)이 같은 화자면 이름/아바타 숨김
+    const prevItem = i > 0 ? reversed[i - 1] : null;
+    const hide = prevItem && prevItem.speaker === item.speaker;
+    const el = createSubtitleEl(item, hide);
     subtitleList.appendChild(el);
   });
 }
