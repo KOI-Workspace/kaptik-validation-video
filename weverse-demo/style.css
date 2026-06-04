@@ -55,7 +55,7 @@ body {
   scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
-  scroll-behavior: smooth;
+  overflow-anchor: none; /* scrollTop 수동 보정을 위해 자동 앵커 비활성화 */
 }
 .sheet-content::-webkit-scrollbar { display: none; }
 

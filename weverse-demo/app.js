@@ -65,6 +65,16 @@ const ANNOTATIONS = {
   },
 };
 
+// 언어별 "최신으로 이동" 버튼 라벨
+const SCROLL_TO_TOP_LABELS = {
+  'en': '↑ Latest',    'id': '↑ Terbaru',  'ja': '↑ 最新へ',
+  'zh-CN': '↑ 最新',   'zh-TW': '↑ 最新',  'es': '↑ Reciente',
+  'pt': '↑ Recente',   'fr': '↑ Récent',   'de': '↑ Neueste',
+  'ko': '↑ 최신',      'ar': '↑ الأحدث',  'hi': '↑ नवीनतम',
+  'th': '↑ ล่าสุด',    'vi': '↑ Mới nhất', 'ru': '↑ Новое',
+  'tr': '↑ En yeni',
+};
+
 const SPEAKER_COLORS = {
   'RM': '#7B8CFF', 'Jin': '#FF7EB3', 'Suga': '#FFB347',
   'j-hope': '#FFE066', 'Jimin': '#FF6B6B', 'V': '#4ECDC4', 'Jungkook': '#5BC8FF',
@@ -135,37 +145,46 @@ document.addEventListener('touchmove', (e) => {
 
 document.addEventListener('touchend', () => { isDragging = false; });
 
-// ── 스크롤 감지 + 터치 중 삽입 지연 ──
+// ── 스크롤 감지 + 모멘텀 종료 후 삽입 ──
 let isUserScrolled = false;
-let isTouching     = false;
+let isScrolling    = false;
+let scrollEndTimer = null;
 const pendingItems = [];
 
 sheetContent.addEventListener('scroll', () => {
   isUserScrolled = sheetContent.scrollTop > 20;
   scrollToTopBtn.classList.toggle('visible', isUserScrolled);
+
+  if (isUserScrolled) {
+    isScrolling = true;
+    clearTimeout(scrollEndTimer);
+    // 스크롤이 200ms 동안 없으면 완전히 멈춘 것으로 판단
+    scrollEndTimer = setTimeout(flushPending, 200);
+  }
 });
 
+/** 지연된 자막을 한 번에 삽입하고 scrollTop을 보정해 덜컹거림 방지 */
+function flushPending() {
+  isScrolling = false;
+  if (pendingItems.length === 0) return;
+  const prevTop    = sheetContent.scrollTop;
+  const prevHeight = sheetContent.scrollHeight;
+  pendingItems.splice(0).forEach(item => subtitleList.appendChild(createSubtitleEl(item)));
+  while (subtitleList.children.length > MAX_HISTORY) {
+    subtitleList.removeChild(subtitleList.firstChild);
+  }
+  const diff = sheetContent.scrollHeight - prevHeight;
+  if (diff > 0) sheetContent.scrollTop = prevTop + diff;
+}
+
 scrollToTopBtn.addEventListener('click', () => {
-  sheetContent.scrollTop = 0;
+  clearTimeout(scrollEndTimer);
+  isScrolling    = false;
+  pendingItems.length = 0; // 최신으로 이동하므로 지연 자막 버림
+  sheetContent.scrollTo({ top: 0, behavior: 'smooth' });
   isUserScrolled = false;
   scrollToTopBtn.classList.remove('visible');
 });
-
-// 터치 시작 → 삽입 지연 모드
-sheetContent.addEventListener('touchstart', () => {
-  isTouching = true;
-}, { passive: true });
-
-// 터치 종료 → 지연된 자막 처리
-document.addEventListener('touchend', () => {
-  if (!isTouching) return;
-  isTouching = false;
-  if (pendingItems.length === 0) return;
-  // 스크롤 감속이 안정된 후 삽입
-  setTimeout(() => {
-    pendingItems.splice(0).forEach(item => prependSubtitle(item));
-  }, 150);
-}, { passive: true });
 
 // ── 언어 팝업 ──
 langFab.addEventListener('click', (e) => {
@@ -179,8 +198,13 @@ let currentLang = 'en';
 langSelect.addEventListener('change', () => {
   currentLang = langSelect.value;
   langPanel.classList.remove('open');
+  updateScrollToTopBtn();
   rerenderAll();
 });
+
+function updateScrollToTopBtn() {
+  scrollToTopBtn.textContent = SCROLL_TO_TOP_LABELS[currentLang] || '↑ Latest';
+}
 
 // ── 재생 ──
 let startTime     = null;
@@ -220,6 +244,9 @@ function clearSubtitles() {
   lastSubtitleStart = -1;
   pausedAt          = 0;
   isUserScrolled    = false;
+  isScrolling       = false;
+  clearTimeout(scrollEndTimer);
+  pendingItems.length = 0;
   subtitleList.innerHTML = '';
   scrollToTopBtn.classList.remove('visible');
   hideContext();
@@ -236,8 +263,8 @@ function updateSubtitle(elapsed) {
   lastSubtitleStart = current.start;
   history.push(current);
 
-  // 스크롤 중이면 큐에 넣고, 터치 종료 후 처리
-  if (isTouching && sheetContent.scrollTop > 20) {
+  // 스크롤 중(터치 모멘텀 포함)이면 큐에 넣고 스크롤 종료 후 처리
+  if (isScrolling && isUserScrolled) {
     pendingItems.push(current);
   } else {
     prependSubtitle(current);
@@ -310,11 +337,15 @@ function prependSubtitle(item) {
   const newEl = createSubtitleEl(item);
 
   if (!atTop) {
-    // 히스토리 읽는 중: appendChild + 브라우저 scroll anchor가 위치 유지
+    // 히스토리 읽는 중: 삽입 후 scrollTop 수동 보정으로 위치 유지
+    const prevTop    = sheetContent.scrollTop;
+    const prevHeight = sheetContent.scrollHeight;
     subtitleList.appendChild(newEl);
     if (subtitleList.children.length > MAX_HISTORY) {
       subtitleList.removeChild(subtitleList.firstChild);
     }
+    const diff = sheetContent.scrollHeight - prevHeight;
+    if (diff > 0) sheetContent.scrollTop = prevTop + diff;
     return;
   }
 
@@ -401,5 +432,6 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-// 초기 시트 위치 적용
+// 초기화
+updateScrollToTopBtn();
 applySheetTop(sheetTop);
