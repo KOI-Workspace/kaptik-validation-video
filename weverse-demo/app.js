@@ -225,42 +225,44 @@ const subtitles = [
 ];
 
 const ANNOTATIONS = {
-  '치과': {
+  // ── 치과 드립 ── (각 언어의 Jin 대사 전체)
+  '이상하면 치과가야 되는거 아니야?': {
     color: '#A78BFA',
     title: '이상하다의 중의성 (Homophone Pun)',
     content: '"이상하다"는 "weird/strange"를 뜻하지만, Jin은 "이상하면 치과 가야 되는 거 아니야?"로 받아쳐 아빠 개그로 변환한다. "이상하다"의 발음이 치아·입 문제처럼 들리기도 한다는 점을 이용한 언어유희.',
   },
-  'dentist': {
+  "shouldn't you go to the dentist?": {
     color: '#A78BFA',
     title: 'Pun on "weird" (이상하다)',
     content: 'In Korean, "weird" is "이상하다" — which can also sound like a dental complaint. When J-Hope called the greeting "weird," Jin immediately spun it into a dad joke: "If something feels weird, shouldn\'t you go to the dentist?"',
   },
-  'dokter gigi': {
+  'bukannya harus ke dokter gigi?': {
     color: '#A78BFA',
     title: 'Permainan kata "aneh" (이상하다)',
     content: 'Dalam bahasa Korea, "aneh" adalah "이상하다" — yang juga bisa terdengar seperti keluhan gigi. Saat J-Hope bilang sapaannya "aneh," Jin langsung menjadikannya lelucon ayah: "Kalau ada yang terasa aneh, bukannya harus ke dokter gigi?"',
   },
-  'dentista': {
+  '¿no deberías ir al dentista?': {
     color: '#A78BFA',
     title: 'Juego de palabras con "raro" (이상하다)',
     content: 'En coreano, "raro" es "이상하다", que también puede sonar como un problema dental. Cuando J-Hope llamó "raro" el saludo, Jin lo convirtió en un chiste de papá: "Si algo se siente raro, ¿no deberías ir al dentista?"',
   },
+  // ── 40km 행군 ── (각 언어의 V 대사 핵심 구문)
   '40키로 행군': {
     color: '#A78BFA',
     title: '40km 행군',
     content: '40km 행군은 보통 1월경 기초훈련 시즌에 실시된다. 완전 군장을 메고 40km를 걷는 극한 훈련으로, V가 "이맘때쯤"이라고 말하자 모두가 즉시 군대 추억을 떠올린다.',
   },
-  '40-kilometer': {
+  '40-kilometer march': {
     color: '#A78BFA',
     title: 'The 40km March',
     content: 'The 40-kilometer march is a grueling part of Korean military basic training, typically done in January. The moment V said "around this time of year," it immediately triggered military flashbacks for everyone in the room.',
   },
-  '40 kilometer': {
+  'Jalan 40 kilometer': {
     color: '#A78BFA',
     title: 'Mars 40 Kilometer',
     content: 'Mars 40 kilometer adalah bagian berat dari pelatihan militer dasar Korea, biasanya dilakukan sekitar Januari. Begitu V bilang "sekitar waktu-waktu begini," semua langsung teringat kenangan militer mereka.',
   },
-  '40 kilómetros': {
+  'marcha de 40 kilómetros': {
     color: '#A78BFA',
     title: 'La marcha de 40 km',
     content: 'La marcha de 40 kilómetros es parte del entrenamiento militar básico coreano, típicamente en enero. En cuanto V dijo "esta época del año," todos recordaron de inmediato sus experiencias militares.',
@@ -296,8 +298,6 @@ const scrollToTopBtn   = document.getElementById('scrollToTopBtn');
 const langFab          = document.getElementById('langFab');
 const langPanel        = document.getElementById('langPanel');
 const langSelect       = document.getElementById('langSelect');
-const contextOverlay   = document.getElementById('contextOverlay');
-const contextCardInner = document.getElementById('contextCardInner');
 
 // 자막 리스트 컨테이너
 const subtitleList = document.createElement('div');
@@ -312,8 +312,7 @@ const MAX_TOP    = () => Math.round(window.innerHeight * 0.75);
 function applySheetTop(top, animate = false) {
   sheetTop = Math.max(MIN_TOP, Math.min(MAX_TOP(), top));
   if (animate) sheet.classList.add('animating');
-  sheet.style.top          = sheetTop + 'px';
-  contextOverlay.style.top = sheetTop + 'px';
+  sheet.style.top = sheetTop + 'px';
   if (animate) {
     setTimeout(() => sheet.classList.remove('animating'), 340);
   }
@@ -474,13 +473,17 @@ function updateSubtitle(elapsed) {
 }
 
 // ── 어노테이션 ──
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function buildAnnotatedHtml(text) {
   let result = escapeHtml(text);
   Object.keys(ANNOTATIONS).forEach(keyword => {
     const ann = ANNOTATIONS[keyword];
     const esc = escapeHtml(keyword);
     result = result.replace(
-      new RegExp(esc),
+      new RegExp(escapeRegex(esc)),
       `<span class="annotated-word" data-key="${esc}" style="color:${ann.color};text-decoration-color:${ann.color}55">${esc}</span>`
     );
   });
@@ -489,7 +492,10 @@ function buildAnnotatedHtml(text) {
 
 function bindAnnotationClicks(el) {
   el.querySelectorAll('.annotated-word').forEach(span => {
-    span.addEventListener('click', () => showContext(span.dataset.key));
+    span.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showContext(span.dataset.key, span);
+    });
   });
 }
 
@@ -604,28 +610,50 @@ function rerenderAll() {
   history.forEach(item => subtitleList.appendChild(createSubtitleEl(item)));
 }
 
-// ── 문화맥락 해설 ──
+// ── 문화맥락 해설 (인라인 카드) ──
 let activeContextKey = null;
+let activeContextEl  = null;
 
-function showContext(key) {
+function showContext(key, triggerSpan) {
+  // 같은 키 재클릭 → 닫기
   if (activeContextKey === key) { hideContext(); return; }
+
+  hideContext();
   activeContextKey = key;
+
   const ann = ANNOTATIONS[key];
   if (!ann) return;
-  contextCardInner.innerHTML = `
-    <div class="context-card-header">
-      <span class="context-card-title" style="color:${ann.color}">${escapeHtml(ann.title)}</span>
-      <button class="context-card-close" id="contextClose">✕</button>
+
+  const subtitleItem = triggerSpan.closest('.subtitle-item');
+  if (!subtitleItem) return;
+
+  const card = document.createElement('div');
+  card.className = 'context-inline-card';
+  card.innerHTML = `
+    <div class="context-inline-card-inner">
+      <div class="context-card-header">
+        <span class="context-card-title" style="color:${ann.color}">${escapeHtml(ann.title)}</span>
+        <button class="context-card-close">✕</button>
+      </div>
+      <p class="context-card-body">${escapeHtml(ann.content)}</p>
     </div>
-    <p class="context-card-body">${escapeHtml(ann.content)}</p>
   `;
-  document.getElementById('contextClose').addEventListener('click', hideContext);
-  contextOverlay.classList.add('visible');
+  card.querySelector('.context-card-close').addEventListener('click', hideContext);
+
+  // column-reverse 레이아웃: DOM 기준 beforebegin = 시각적으로 바로 아래
+  subtitleItem.insertAdjacentElement('beforebegin', card);
+  activeContextEl = card;
+
+  requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('open')));
 }
 
 function hideContext() {
+  if (!activeContextEl) return;
+  const el     = activeContextEl;
+  activeContextEl  = null;
   activeContextKey = null;
-  contextOverlay.classList.remove('visible');
+  el.classList.remove('open');
+  el.addEventListener('transitionend', () => el.remove(), { once: true });
 }
 
 function escapeHtml(str) {
