@@ -225,23 +225,23 @@ const subtitles = [
 ];
 
 const ANNOTATIONS = {
-  // ── 치과 드립 ── (각 언어의 Jin 대사 전체)
-  '이상하면 치과가야 되는거 아니야?': {
+  // ── 치과 드립 ── (각 언어의 Jin 대사 전체 문장)
+  '근데 이상하면 치과가야 되는거 아니야? 하하하': {
     color: '#A78BFA',
     title: '이상하다의 중의성 (Homophone Pun)',
     content: '"이상하다"는 "weird/strange"를 뜻하지만, Jin은 "이상하면 치과 가야 되는 거 아니야?"로 받아쳐 아빠 개그로 변환한다. "이상하다"의 발음이 치아·입 문제처럼 들리기도 한다는 점을 이용한 언어유희.',
   },
-  "shouldn't you go to the dentist?": {
+  "But if something feels weird, shouldn't you go to the dentist? Hahaha.": {
     color: '#A78BFA',
     title: 'Pun on "weird" (이상하다)',
     content: 'In Korean, "weird" is "이상하다" — which can also sound like a dental complaint. When J-Hope called the greeting "weird," Jin immediately spun it into a dad joke: "If something feels weird, shouldn\'t you go to the dentist?"',
   },
-  'bukannya harus ke dokter gigi?': {
+  'Tapi kalau ada yang terasa aneh, bukannya harus ke dokter gigi? Hahaha.': {
     color: '#A78BFA',
     title: 'Permainan kata "aneh" (이상하다)',
     content: 'Dalam bahasa Korea, "aneh" adalah "이상하다" — yang juga bisa terdengar seperti keluhan gigi. Saat J-Hope bilang sapaannya "aneh," Jin langsung menjadikannya lelucon ayah: "Kalau ada yang terasa aneh, bukannya harus ke dokter gigi?"',
   },
-  '¿no deberías ir al dentista?': {
+  'Pero si algo se siente raro, ¿no deberías ir al dentista? Jajaja.': {
     color: '#A78BFA',
     title: 'Juego de palabras con "raro" (이상하다)',
     content: 'En coreano, "raro" es "이상하다", que también puede sonar como un problema dental. Cuando J-Hope llamó "raro" el saludo, Jin lo convirtió en un chiste de papá: "Si algo se siente raro, ¿no deberías ir al dentista?"',
