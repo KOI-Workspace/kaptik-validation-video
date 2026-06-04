@@ -135,8 +135,10 @@ document.addEventListener('touchmove', (e) => {
 
 document.addEventListener('touchend', () => { isDragging = false; });
 
-// ── 스크롤 감지 ──
+// ── 스크롤 감지 + 터치 중 삽입 지연 ──
 let isUserScrolled = false;
+let isTouching     = false;
+const pendingItems = [];
 
 sheetContent.addEventListener('scroll', () => {
   isUserScrolled = sheetContent.scrollTop > 20;
@@ -148,6 +150,22 @@ scrollToTopBtn.addEventListener('click', () => {
   isUserScrolled = false;
   scrollToTopBtn.classList.remove('visible');
 });
+
+// 터치 시작 → 삽입 지연 모드
+sheetContent.addEventListener('touchstart', () => {
+  isTouching = true;
+}, { passive: true });
+
+// 터치 종료 → 지연된 자막 처리
+document.addEventListener('touchend', () => {
+  if (!isTouching) return;
+  isTouching = false;
+  if (pendingItems.length === 0) return;
+  // 스크롤 감속이 안정된 후 삽입
+  setTimeout(() => {
+    pendingItems.splice(0).forEach(item => prependSubtitle(item));
+  }, 150);
+}, { passive: true });
 
 // ── 언어 팝업 ──
 langFab.addEventListener('click', (e) => {
@@ -217,7 +235,13 @@ function updateSubtitle(elapsed) {
   if (!current || current.start === lastSubtitleStart) return;
   lastSubtitleStart = current.start;
   history.push(current);
-  prependSubtitle(current);
+
+  // 스크롤 중이면 큐에 넣고, 터치 종료 후 처리
+  if (isTouching && sheetContent.scrollTop > 20) {
+    pendingItems.push(current);
+  } else {
+    prependSubtitle(current);
+  }
 }
 
 // ── 어노테이션 ──
