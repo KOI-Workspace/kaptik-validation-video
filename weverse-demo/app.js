@@ -139,11 +139,12 @@ const langSelect = document.getElementById('langSelect');
 const dragHandle = document.getElementById('dragHandle');
 const headerPanel = document.getElementById('headerPanel');
 
-// ── 헤더만 위아래로 드래그 (자막/컨트롤은 고정) ──
+// ── 헤더 드래그 + 탭으로 접기/펼치기 ──
 let headerOffset = 0;
 let dragStartY = 0;
 let isDragging = false;
-const DRAG_HANDLE_H = 24;
+let tapStartY = 0;
+let tapStartTime = 0;
 const MAX_DRAG = window.innerHeight * 0.6;
 
 function applyHeaderOffset(offset) {
@@ -152,22 +153,32 @@ function applyHeaderOffset(offset) {
 }
 
 dragHandle.addEventListener('touchstart', (e) => {
+  tapStartY = e.touches[0].clientY;
+  tapStartTime = Date.now();
   dragStartY = e.touches[0].clientY;
-  isDragging = true;
+  isDragging = false;
   e.preventDefault();
 }, { passive: false });
 
 document.addEventListener('touchmove', (e) => {
-  if (!isDragging) return;
+  if (!tapStartTime) return;
   const delta = e.touches[0].clientY - dragStartY;
+  if (Math.abs(e.touches[0].clientY - tapStartY) > 6) isDragging = true;
+  if (!isDragging) return;
   const newOffset = Math.max(0, Math.min(MAX_DRAG, headerOffset + delta));
   applyHeaderOffset(newOffset);
   dragStartY = e.touches[0].clientY;
   e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('touchend', () => {
+document.addEventListener('touchend', (e) => {
+  const elapsed = Date.now() - tapStartTime;
+  const moved = Math.abs(e.changedTouches[0].clientY - tapStartY);
+  if (elapsed < 250 && moved < 8 && !isDragging) {
+    headerPanel.classList.toggle('collapsed');
+  }
   isDragging = false;
+  tapStartTime = 0;
 });
 
 const MAX_HISTORY = 20;
@@ -175,16 +186,16 @@ let history = [];
 let lastSubtitleStart = -1;
 let isUserScrolled = false;
 
-// 스크롤 감지 — 사용자가 위로 올리면 플로팅 버튼 표시
+// 스크롤 감지 — 사용자가 아래로 내리면 플로팅 버튼 표시
 subtitleArea.addEventListener('scroll', () => {
-  const atBottom = subtitleArea.scrollTop >= subtitleArea.scrollHeight - subtitleArea.clientHeight - 20;
-  isUserScrolled = !atBottom;
+  const atTop = subtitleArea.scrollTop <= 20;
+  isUserScrolled = !atTop;
   scrollToBottomBtn.classList.toggle('visible', isUserScrolled);
 });
 
-// 플로팅 버튼 — 최신 자막으로 이동
+// 플로팅 버튼 — 최신 자막(맨 위)으로 이동
 scrollToBottomBtn.addEventListener('click', () => {
-  subtitleArea.scrollTop = subtitleArea.scrollHeight;
+  subtitleArea.scrollTop = 0;
   isUserScrolled = false;
   scrollToBottomBtn.classList.remove('visible');
 });
@@ -267,24 +278,25 @@ function updateSubtitle(elapsed) {
 
 function renderHistory() {
   subtitleHistory.innerHTML = '';
-  const len = history.length;
 
-  history.forEach((item, i) => {
-    const distFromEnd = len - 1 - i;
+  // 역순 렌더링 (최신이 맨 위)
+  const reversed = [...history].reverse();
+
+  reversed.forEach((item, i) => {
     const p = document.createElement('p');
 
-    if (distFromEnd === 0) p.className = 'subtitle-line active';
-    else if (distFromEnd === 1) p.className = 'subtitle-line prev-1';
-    else if (distFromEnd <= 4) p.className = 'subtitle-line prev-2';
+    if (i === 0) p.className = 'subtitle-line active';
+    else if (i === 1) p.className = 'subtitle-line prev-1';
+    else if (i <= 4) p.className = 'subtitle-line prev-2';
     else p.className = 'subtitle-line';
 
     const text = item[currentLang] || item.en || '';
     const speaker = item.speaker || '';
-    const prevSpeaker = i > 0 ? (history[i - 1].speaker || '') : '';
+    const prevSpeaker = i > 0 ? (reversed[i - 1].speaker || '') : '';
     const showSpeaker = speaker && speaker !== prevSpeaker;
 
     if (showSpeaker) {
-      const color = SPEAKER_COLORS[speaker] || '#05F048';
+      const color = SPEAKER_COLORS[speaker] || '#aaaaaa';
       p.innerHTML = `<span class="speaker" style="color:${color}">${escapeHtml(speaker)}</span>&ensp;${escapeHtml(text)}`;
     } else {
       p.textContent = text;
@@ -293,9 +305,9 @@ function renderHistory() {
     subtitleHistory.appendChild(p);
   });
 
-  // 사용자가 위로 스크롤 중이 아닐 때만 자동으로 최하단 이동
+  // 사용자가 스크롤 중이 아닐 때만 자동으로 최상단(최신 자막)으로 이동
   if (!isUserScrolled) {
-    subtitleArea.scrollTop = subtitleArea.scrollHeight;
+    subtitleArea.scrollTop = 0;
   }
 }
 
