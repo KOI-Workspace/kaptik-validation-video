@@ -129,33 +129,39 @@ const LANG_FLAGS = {
 };
 
 // ── DOM ──
-const startBtn              = document.getElementById('startBtn');
-const resetBtn              = document.getElementById('resetBtn');
-const subtitleHistory       = document.getElementById('subtitleHistory');
-const subtitleArea          = document.getElementById('subtitleArea');
-const scrollToBottomBtn     = document.getElementById('scrollToBottomBtn');
-const langSelect            = document.getElementById('langSelect');
-const infoBtn               = document.getElementById('infoBtn');
-const infoPanel             = document.getElementById('infoPanel');
-const infoBtnFlag           = document.getElementById('infoBtnFlag');
-const currentSubtitlePanel  = document.getElementById('currentSubtitlePanel');
-const currentSubtitleLines  = document.getElementById('currentSubtitleLines');
-const resizeHandle          = document.getElementById('resizeHandle');
-const contextCardContainer  = document.getElementById('contextCardContainer');
-const contextCardInner      = document.getElementById('contextCardInner');
+const startBtn             = document.getElementById('startBtn');
+const resetBtn             = document.getElementById('resetBtn');
+const subtitleHistory      = document.getElementById('subtitleHistory');
+const subtitleArea         = document.getElementById('subtitleArea');
+const scrollToBottomBtn    = document.getElementById('scrollToBottomBtn');
+const langSelect           = document.getElementById('langSelect');
+const langFab              = document.getElementById('langFab');
+const langFabFlag          = document.getElementById('langFabFlag');
+const langPanel            = document.getElementById('langPanel');
+const currentSubtitlePanel = document.getElementById('currentSubtitlePanel');
+const currentSubtitleLines = document.getElementById('currentSubtitleLines');
+const resizeHandle         = document.getElementById('resizeHandle');
+const contextCardContainer = document.getElementById('contextCardContainer');
+const contextCardInner     = document.getElementById('contextCardInner');
 
-// ── 정보 패널 토글 ──
-infoBtn.addEventListener('click', () => {
-  const isOpen = infoPanel.classList.toggle('open');
-  infoBtn.classList.toggle('open', isOpen);
+// ── 언어 팝업 토글 ──
+langFab.addEventListener('click', (e) => {
+  e.stopPropagation();
+  langPanel.classList.toggle('open');
 });
+
+document.addEventListener('click', () => {
+  langPanel.classList.remove('open');
+});
+
+langPanel.addEventListener('click', (e) => e.stopPropagation());
 
 // ── 언어 변경 ──
 let currentLang = 'en';
 
 langSelect.addEventListener('change', () => {
   currentLang = langSelect.value;
-  infoBtnFlag.textContent = LANG_FLAGS[currentLang] || '🌐';
+  langFabFlag.textContent = LANG_FLAGS[currentLang] || '🌐';
   rerenderAll();
 });
 
