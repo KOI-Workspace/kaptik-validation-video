@@ -156,6 +156,7 @@ langPanel.addEventListener('click', (e) => e.stopPropagation());
 let currentLang = 'en';
 langSelect.addEventListener('change', () => {
   currentLang = langSelect.value;
+  langPanel.classList.remove('open');
   rerenderAll();
 });
 
