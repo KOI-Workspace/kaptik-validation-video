@@ -105,7 +105,6 @@ const subtitles = [
     "es": "y termino todo rápido, una cosa tras otra."}
 ];
 
-// ── 문화맥락 해설 (Elden Ring만) ──
 const ANNOTATIONS = {
   'Elden Ring': {
     color: '#A78BFA',
@@ -138,82 +137,109 @@ const langSelect           = document.getElementById('langSelect');
 const langFab              = document.getElementById('langFab');
 const langFabFlag          = document.getElementById('langFabFlag');
 const langPanel            = document.getElementById('langPanel');
-const currentSubtitlePanel = document.getElementById('currentSubtitlePanel');
-const currentSubtitleLines = document.getElementById('currentSubtitleLines');
+const headerPanel          = document.getElementById('headerPanel');
+const headerDragBar        = document.getElementById('headerDragBar');
+const headerSubtitleLines  = document.getElementById('headerSubtitleLines');
 const resizeHandle         = document.getElementById('resizeHandle');
 const contextCardContainer = document.getElementById('contextCardContainer');
 const contextCardInner     = document.getElementById('contextCardInner');
 
-// ── 언어 팝업 토글 ──
+// ── 언어 팝업 ──
 langFab.addEventListener('click', (e) => {
   e.stopPropagation();
   langPanel.classList.toggle('open');
 });
-
-document.addEventListener('click', () => {
-  langPanel.classList.remove('open');
-});
-
+document.addEventListener('click', () => langPanel.classList.remove('open'));
 langPanel.addEventListener('click', (e) => e.stopPropagation());
 
-// ── 언어 변경 ──
 let currentLang = 'en';
-
 langSelect.addEventListener('change', () => {
   currentLang = langSelect.value;
   langFabFlag.textContent = LANG_FLAGS[currentLang] || '🌐';
   rerenderAll();
 });
 
-// ── 현재 패널 리사이즈 ──
-let currentHeaderH = 92;
-const MIN_H = 72;
-const MAX_H = 215;
+// ── 헤더 위치 + 높이 ──
+let headerTop    = 0;
+let headerHeight = 110;
+const MIN_TOP    = 0;
+const MAX_TOP    = () => window.innerHeight * 0.55;
+const MIN_HEIGHT = 72;
+const MAX_HEIGHT = 230;
+const DRAG_BAR_H = 38;
+const RESIZE_H   = 20;
 
-let isResizing = false;
+function applyHeaderGeometry() {
+  headerPanel.style.top    = headerTop + 'px';
+  headerPanel.style.height = headerHeight + 'px';
+  // 해설 카드도 헤더 아래로 따라다님
+  contextCardContainer.style.top = (headerTop + headerHeight) + 'px';
+}
+
+// 드래그로 위치 이동 (상단 drag bar)
+let isMoveGrab   = false;
+let moveStartY   = 0;
+let moveStartTop = 0;
+
+headerDragBar.addEventListener('touchstart', (e) => {
+  isMoveGrab   = true;
+  moveStartY   = e.touches[0].clientY;
+  moveStartTop = headerTop;
+  e.preventDefault();
+}, { passive: false });
+
+// 드래그로 높이 조절 (하단 resize handle)
+let isResizing   = false;
 let resizeStartY = 0;
-let resizeStartH = 92;
-let lastVisibleCount = 1;
+let resizeStartH = 0;
+let lastCount    = 1;
 
 resizeHandle.addEventListener('touchstart', (e) => {
-  isResizing = true;
+  isResizing   = true;
   resizeStartY = e.touches[0].clientY;
-  resizeStartH = currentHeaderH;
+  resizeStartH = headerHeight;
   e.preventDefault();
 }, { passive: false });
 
 document.addEventListener('touchmove', (e) => {
-  if (!isResizing) return;
-  const delta = e.touches[0].clientY - resizeStartY;
-  currentHeaderH = Math.max(MIN_H, Math.min(MAX_H, resizeStartH + delta));
-  currentSubtitlePanel.style.height = currentHeaderH + 'px';
-
-  const newCount = getVisibleCount();
-  renderCurrentPanel();
-  if (newCount !== lastVisibleCount) {
-    lastVisibleCount = newCount;
-    rerenderHistory();
+  if (isMoveGrab) {
+    const delta = e.touches[0].clientY - moveStartY;
+    headerTop = Math.max(MIN_TOP, Math.min(MAX_TOP(), moveStartTop + delta));
+    applyHeaderGeometry();
+    e.preventDefault();
+  } else if (isResizing) {
+    const delta = e.touches[0].clientY - resizeStartY;
+    headerHeight = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, resizeStartH + delta));
+    applyHeaderGeometry();
+    const newCount = getVisibleCount();
+    renderHeaderPanel();
+    if (newCount !== lastCount) {
+      lastCount = newCount;
+      rerenderHistory();
+    }
+    e.preventDefault();
   }
-  e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('touchend', () => { isResizing = false; });
+document.addEventListener('touchend', () => {
+  isMoveGrab = false;
+  isResizing = false;
+});
 
 function getVisibleCount() {
-  if (currentHeaderH < 130) return 1;
-  if (currentHeaderH < 175) return 2;
+  const contentH = headerHeight - DRAG_BAR_H - RESIZE_H;
+  if (contentH < 68)  return 1;
+  if (contentH < 115) return 2;
   return 3;
 }
 
-// ── 스크롤 감지 ──
+// ── 스크롤 ──
 let isUserScrolled = false;
-
 subtitleArea.addEventListener('scroll', () => {
   const atBottom = subtitleArea.scrollTop >= subtitleArea.scrollHeight - subtitleArea.clientHeight - 20;
   isUserScrolled = !atBottom;
   scrollToBottomBtn.classList.toggle('visible', isUserScrolled);
 });
-
 scrollToBottomBtn.addEventListener('click', () => {
   subtitleArea.scrollTop = subtitleArea.scrollHeight;
   isUserScrolled = false;
@@ -240,14 +266,13 @@ function startSubtitles() {
   timerInterval = setInterval(() => {
     const elapsed = (Date.now() - startTime) / 1000;
     updateSubtitle(elapsed);
-    const last = subtitles[subtitles.length - 1];
-    if (elapsed > last.end + 1) stopSubtitles();
+    if (elapsed > subtitles[subtitles.length - 1].end + 1) stopSubtitles();
   }, 80);
 }
 
 function stopSubtitles() {
   isRunning = false;
-  pausedAt = (Date.now() - startTime) / 1000;
+  pausedAt  = (Date.now() - startTime) / 1000;
   clearInterval(timerInterval);
   timerInterval = null;
   startBtn.textContent = '▶ Start';
@@ -256,41 +281,40 @@ function stopSubtitles() {
 
 function clearSubtitles() {
   history = [];
-  lastSubtitleStart = -1;
+  lastSubtitleStart  = -1;
   historyRenderedUpTo = -1;
-  pausedAt = 0;
-  isUserScrolled = false;
-  subtitleHistory.innerHTML = '';
-  currentSubtitleLines.innerHTML = '';
+  pausedAt           = 0;
+  isUserScrolled     = false;
+  subtitleHistory.innerHTML     = '';
+  headerSubtitleLines.innerHTML = '';
   scrollToBottomBtn.classList.remove('visible');
   hideContext();
 }
 
-// ── 자막 히스토리 ──
+// ── 자막 ──
 const MAX_HISTORY = 60;
-let history = [];
-let lastSubtitleStart = -1;
-let historyRenderedUpTo = -1; // history 배열에서 히스토리 패널에 마지막으로 렌더한 인덱스
+let history            = [];
+let lastSubtitleStart  = -1;
+let historyRenderedUpTo = -1;
 
 function updateSubtitle(elapsed) {
   const current = subtitles.find(s => elapsed >= s.start && elapsed < s.end);
-  if (!current) return;
-  if (current.start === lastSubtitleStart) return;
+  if (!current || current.start === lastSubtitleStart) return;
   lastSubtitleStart = current.start;
   history.push(current);
-  renderCurrentPanel();
+  renderHeaderPanel();
   appendNewHistoryItems();
 }
 
-// ── 텍스트에 어노테이션 하이라이트 적용 ──
+// ── 어노테이션 ──
 function buildAnnotatedHtml(text) {
   let result = escapeHtml(text);
   Object.keys(ANNOTATIONS).forEach(keyword => {
     const ann = ANNOTATIONS[keyword];
-    const escaped = escapeHtml(keyword);
+    const esc = escapeHtml(keyword);
     result = result.replace(
-      new RegExp(escaped, 'g'),
-      `<span class="annotated-word" data-key="${escaped}" style="color:${ann.color};text-decoration-color:${ann.color}60">${escaped}</span>`
+      new RegExp(esc, 'g'),
+      `<span class="annotated-word" data-key="${esc}" style="color:${ann.color};text-decoration-color:${ann.color}55">${esc}</span>`
     );
   });
   return result;
@@ -302,17 +326,16 @@ function bindAnnotationClicks(el) {
   });
 }
 
-// ── 최신 자막 패널 렌더 ──
-function renderCurrentPanel() {
+// ── 헤더 패널 렌더 ──
+function renderHeaderPanel() {
   const count = getVisibleCount();
   const items = history.slice(-count);
-  currentSubtitleLines.innerHTML = '';
+  headerSubtitleLines.innerHTML = '';
   items.forEach((item, i) => {
     const isLatest = i === items.length - 1;
     const p = document.createElement('p');
     p.className = isLatest ? 'current-line' : 'current-line current-line-prev';
-
-    const text = item[currentLang] || item.en || '';
+    const text    = item[currentLang] || item.en || '';
     const speaker = item.speaker || '';
     let html = '';
     if (speaker) {
@@ -322,26 +345,27 @@ function renderCurrentPanel() {
     html += buildAnnotatedHtml(text);
     p.innerHTML = html;
     bindAnnotationClicks(p);
-    currentSubtitleLines.appendChild(p);
+    headerSubtitleLines.appendChild(p);
   });
 }
 
-// ── 히스토리 패널: 새 항목만 하단에 추가 ──
+// ── 히스토리 패널: 새 항목 하단에 추가 ──
 function appendNewHistoryItems() {
   const count = getVisibleCount();
-  // history[0 .. length-count-1] 이 히스토리 패널에 표시되어야 함
+  // 헤더에 표시 중인 항목은 히스토리에서 제외
   const historyEndIndex = history.length - count - 1;
 
   for (let i = historyRenderedUpTo + 1; i <= historyEndIndex; i++) {
     if (i < 0) continue;
-    const item = history[i];
+    const item        = history[i];
     const showSpeaker = i === 0 || history[i].speaker !== history[i - 1].speaker;
     const p = createHistoryEl(item, showSpeaker);
     p.style.opacity = '0';
     subtitleHistory.appendChild(p);
+    // eslint-disable-next-line no-loop-func
     requestAnimationFrame(() => {
       p.style.transition = 'opacity 0.25s ease-out';
-      p.style.opacity = '1';
+      p.style.opacity    = '1';
     });
     historyRenderedUpTo = i;
   }
@@ -351,14 +375,13 @@ function appendNewHistoryItems() {
   }
 }
 
-// ── 히스토리 전체 재렌더 (언어 변경 또는 count 변경 시) ──
 function rerenderHistory() {
-  subtitleHistory.innerHTML = '';
-  historyRenderedUpTo = -1;
-  const count = getVisibleCount();
+  subtitleHistory.innerHTML  = '';
+  historyRenderedUpTo        = -1;
+  const count           = getVisibleCount();
   const historyEndIndex = history.length - count - 1;
   for (let i = 0; i <= historyEndIndex; i++) {
-    const item = history[i];
+    const item        = history[i];
     const showSpeaker = i === 0 || history[i].speaker !== history[i - 1].speaker;
     subtitleHistory.appendChild(createHistoryEl(item, showSpeaker));
     historyRenderedUpTo = i;
@@ -367,14 +390,14 @@ function rerenderHistory() {
 }
 
 function rerenderAll() {
-  renderCurrentPanel();
+  renderHeaderPanel();
   rerenderHistory();
 }
 
 function createHistoryEl(item, showSpeaker) {
   const p = document.createElement('p');
   p.className = 'history-line';
-  const text = item[currentLang] || item.en || '';
+  const text    = item[currentLang] || item.en || '';
   const speaker = item.speaker || '';
   let html = '';
   if (showSpeaker && speaker) {
@@ -393,10 +416,8 @@ let activeContextKey = null;
 function showContext(key) {
   if (activeContextKey === key) { hideContext(); return; }
   activeContextKey = key;
-
   const ann = ANNOTATIONS[key];
   if (!ann) return;
-
   contextCardInner.innerHTML = `
     <div class="context-card-header">
       <span class="context-card-title" style="color:${ann.color}">${escapeHtml(ann.title)}</span>
@@ -418,3 +439,6 @@ function escapeHtml(str) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
+
+// 초기 헤더 위치 적용
+applyHeaderGeometry();
