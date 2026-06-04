@@ -91,11 +91,12 @@ body {
 
 /* 상단: 위치 이동 드래그 영역 */
 .header-drag-bar {
-  height: 32px;
+  height: 36px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   touch-action: none;
   cursor: grab;
 }
@@ -146,14 +147,19 @@ body {
 }
 
 .expand-toggle-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: rgba(255,255,255,0.3);
   cursor: pointer;
-  padding: 4px 12px;
+  padding: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation;
   transition: color 0.2s;
 }
 .expand-toggle-btn:active { color: rgba(255,255,255,0.7); }
@@ -161,6 +167,9 @@ body {
 .icon-collapse { display: none; }
 .header-panel.expanded .icon-expand   { display: none; }
 .header-panel.expanded .icon-collapse { display: block; }
+
+/* 하단 토글 영역 제거 (drag bar로 이동) */
+.expand-toggle-area { display: none; }
 
 /* ── 문화맥락 해설 카드 (헤더 아래 따라다님) ── */
 .context-card-container {
