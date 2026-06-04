@@ -183,35 +183,25 @@ const subtitles = [
 ];
 
 const ANNOTATIONS = {
-  '이상': {
+  '치과': {
     color: '#A78BFA',
     title: '이상하다의 중의성 (Homophone Pun)',
-    content: '"이상하다"(iseunghada)는 "weird" 또는 "strange"를 의미하지만, 발음이 치아/입의 문제처럼 들린다. J-Hope가 Jin의 인사가 "이상했다"(weird)고 하자, Jin은 즉시 "이상하면 치과가야 되는 거 아니야?"(If something\'s wrong with your teeth, shouldn\'t you go to the dentist?)라며 치과 드립으로 반응해 미묘한 어색함을 재미있는 아빠 개그로 변환한다.',
+    content: '"이상하다"는 "weird/strange"를 뜻하지만, Jin은 "이상하면 치과 가야 되는 거 아니야?"로 받아쳐 아빠 개그로 변환한다. "이상하다"의 발음이 치아·입 문제처럼 들리기도 한다는 점을 이용한 언어유희.',
   },
-  '이맘때': {
-    color: '#A78BFA',
-    title: '겨울 시즌 = 군 기초훈련 시즌',
-    content: '40km 행군은 보통 1월경 기초훈련 시즌에 실시된다. V가 "이맘때쯤"이라고 말하자 모두가 즉시 군대 추억을 떠올린다. 한국 남성들에게 겨울은 군 복무라는 불가피한 현실을 상징한다.',
-  },
-  'weird': {
+  'dentist': {
     color: '#A78BFA',
     title: 'Pun on "weird" (이상하다)',
-    content: '"Weird" translates to "이상하다" in Korean, which also sounds like a dental issue. When J-Hope calls Jin\'s greeting "weird," Jin immediately cracks a dad joke about going to the dentist, turning an awkward moment into comedy.',
-  },
-  'this time of year': {
-    color: '#A78BFA',
-    title: 'Winter = Military Training Season',
-    content: 'The 40-kilometer march typically happens around January during basic military training. When V says "this time of year," it instantly brings up military memories. For Korean men, winter symbolizes military service—an unavoidable rite of passage.',
-  },
-  '아리랑': {
-    color: '#A78BFA',
-    title: '아리랑',
-    content: '한국의 대표적인 전통 민요. 수백 년의 역사를 지닌 국민 가요로, 유네스코 인류무형문화유산에 등재되어 있다. 민간에서 자연스럽게 흥얼거릴 만큼 친숙하며, 가사와 멜로디가 지역마다 조금씩 다른 변형이 존재한다.',
+    content: 'In Korean, "weird" is "이상하다" — which can also sound like a dental complaint. When J-Hope called the greeting "weird," Jin immediately spun it into a dad joke: "If something feels weird, shouldn\'t you go to the dentist?"',
   },
   '40키로 행군': {
-    color: '#5BC8FF',
+    color: '#A78BFA',
     title: '40km 행군',
-    content: '한국 군 기초훈련의 핵심 과목. 완전 군장(20~30kg)을 메고 40km를 걷는 훈련으로 체력과 인내의 극한을 시험한다. BTS 멤버 전원은 병역 의무를 이행했으며, 이 경험이 종종 웃음 섞인 대화 소재로 등장한다.',
+    content: '40km 행군은 보통 1월경 기초훈련 시즌에 실시된다. 완전 군장을 메고 40km를 걷는 극한 훈련으로, V가 "이맘때쯤"이라고 말하자 모두가 즉시 군대 추억을 떠올린다.',
+  },
+  '40-kilometer': {
+    color: '#A78BFA',
+    title: 'The 40km March',
+    content: 'The 40-kilometer march is a grueling part of Korean military basic training, typically done in January. The moment V said "around this time of year," it immediately triggered military flashbacks for everyone in the room.',
   },
 };
 
@@ -428,7 +418,7 @@ function buildAnnotatedHtml(text) {
     const ann = ANNOTATIONS[keyword];
     const esc = escapeHtml(keyword);
     result = result.replace(
-      new RegExp(esc, 'g'),
+      new RegExp(esc),
       `<span class="annotated-word" data-key="${esc}" style="color:${ann.color};text-decoration-color:${ann.color}55">${esc}</span>`
     );
   });
