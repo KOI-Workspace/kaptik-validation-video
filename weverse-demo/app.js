@@ -135,7 +135,6 @@ const subtitleArea         = document.getElementById('subtitleArea');
 const scrollToBottomBtn    = document.getElementById('scrollToBottomBtn');
 const langSelect           = document.getElementById('langSelect');
 const langFab              = document.getElementById('langFab');
-const langFabFlag          = document.getElementById('langFabFlag');
 const langPanel            = document.getElementById('langPanel');
 const headerPanel          = document.getElementById('headerPanel');
 const headerDragBar        = document.getElementById('headerDragBar');
@@ -155,7 +154,6 @@ langPanel.addEventListener('click', (e) => e.stopPropagation());
 let currentLang = 'en';
 langSelect.addEventListener('change', () => {
   currentLang = langSelect.value;
-  langFabFlag.textContent = LANG_FLAGS[currentLang] || '🌐';
   rerenderAll();
 });
 
