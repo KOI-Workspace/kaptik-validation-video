@@ -1,0 +1,10 @@
+[
+  { "start": 0, "end": 3.5, "speaker": "RM", "en": "Hey everyone, we're finally here!", "id": "Hei semua, kita akhirnya di sini!", "ja": "みなさん、やっと来ましたよ！", "zh-CN": "大家好，我们终于来了！" },
+  { "start": 3.5, "end": 7.0, "speaker": "Jin", "en": "It's been so long since our last live, right?", "id": "Sudah lama banget sejak live terakhir kita, kan?", "ja": "最後のライブからずいぶん経ちましたよね？", "zh-CN": "好久没有直播了，对吧？" },
+  { "start": 7.0, "end": 10.5, "speaker": "Jungkook", "en": "I missed you all so much!", "id": "Aku sangat kangen kalian semua!", "ja": "みんなのことがとても恋しかった！", "zh-CN": "我非常想念大家！" },
+  { "start": 10.5, "end": 14.0, "speaker": "V", "en": "We prepared a lot of fun stuff for today!", "id": "Kami sudah menyiapkan banyak hal seru untuk hari ini!", "ja": "今日はたくさん楽しいことを用意してきました！", "zh-CN": "我们为今天准备了很多有趣的东西！" },
+  { "start": 14.0, "end": 18.0, "speaker": "Suga", "en": "To be honest, I was a little nervous coming on live today.", "id": "Sejujurnya, saya sedikit gugup hari ini.", "ja": "正直、今日ライブに来るのが少し緊張しました。", "zh-CN": "说实话，今天来直播我有点紧张。" },
+  { "start": 18.0, "end": 22.0, "speaker": "j-hope", "en": "No way! You're always so natural on camera!", "id": "Mana mungkin! Kamu selalu terlihat alami di depan kamera!", "ja": "まさか！カメラの前ではいつも自然なのに！", "zh-CN": "不会吧！你在镜头前一向很自然的！" },
+  { "start": 22.0, "end": 26.5, "speaker": "Jimin", "en": "Thank you so much for your support. We always appreciate it.", "id": "Terima kasih banyak atas dukungan kalian. Kami selalu menghargainya.", "ja": "支えてくれて本当にありがとうございます。いつも感謝しています。", "zh-CN": "非常感谢大家的支持，我们一直都很感激。" },
+  { "start": 26.5, "end": 31.0, "speaker": "RM", "en": "We have a big announcement to make today, so please stay tuned!", "id": "Ada pengumuman besar yang akan kami sampaikan hari ini, jadi tetap ikuti!", "ja": "今日は大きなお知らせがあるので、お楽しみに！", "zh-CN": "我们今天有一个重大公告，请大家继续关注！" }
+]
