@@ -148,12 +148,11 @@ body {
 
 .expand-toggle-btn {
   position: absolute;
-  right: 14px;
-  top: 50%;
-  transform: translateY(-50%);
+  right: 12px;
+  bottom: 8px;
   background: none;
   border: none;
-  color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.28);
   cursor: pointer;
   padding: 4px;
   display: flex;
