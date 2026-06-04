@@ -281,12 +281,12 @@ function prependSubtitle(item) {
     // 히스토리 읽는 중: 삽입 후 scrollTop 보정으로 화면 고정
     const prevScrollTop = sheetContent.scrollTop;
     subtitleList.insertBefore(newEl, subtitleList.firstChild);
-    sheetContent.scrollTop = prevScrollTop + newEl.offsetHeight;
+    sheetContent.scrollTop = prevScrollTop + newEl.getBoundingClientRect().height;
 
     const allItems = subtitleList.querySelectorAll('.subtitle-item');
     if (allItems.length > MAX_HISTORY) {
       const removed = allItems[allItems.length - 1];
-      sheetContent.scrollTop -= removed.offsetHeight;
+      sheetContent.scrollTop -= removed.getBoundingClientRect().height;
       subtitleList.removeChild(removed);
     }
     return;

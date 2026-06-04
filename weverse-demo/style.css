@@ -59,6 +59,7 @@ body {
 .sheet-content {
   flex: 1;
   overflow-y: auto;
+  overflow-anchor: none; /* 브라우저 자동 앵커링 비활성화 */
   scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
