@@ -1,5 +1,5 @@
 /**
- * Kaptik Weverse Demo — 자막 타이머 + 문화맥락 해설
+ * Kaptik Weverse Demo
  */
 
 const subtitles = [
@@ -105,33 +105,18 @@ const subtitles = [
     "es": "y termino todo rápido, una cosa tras otra."}
 ];
 
-// ── 문화맥락 해설 데이터 ──
+// ── 문화맥락 해설 (Elden Ring만) ──
 const ANNOTATIONS = {
   'Elden Ring': {
     color: '#A78BFA',
     title: 'Elden Ring',
-    content: 'FromSoftware가 2022년 출시한 오픈월드 액션 RPG. 극도로 높은 난이도로 유명하며, "소울라이크" 장르의 대표작. 진이 월드투어 중 대기 시간에 100시간 넘게 플레이했다고 언급해 팬들 사이에서 화제가 됨.',
-  },
-  'PlayStation': {
-    color: '#60A5FA',
-    title: 'PlayStation',
-    content: 'Sony의 게임 콘솔 브랜드. 진이 언급한 "PlayStation"은 PS5를 지칭. BTS 멤버들이 자주 언급하는 게임 플랫폼으로, 팬들에게 친숙한 문화 코드.',
-  },
-  'hyung': {
-    color: '#F472B6',
-    title: 'hyung (형)',
-    content: '한국어로 남성이 자신보다 나이 많은 남성을 부르는 호칭. 정국이 진을 "Jin hyung"이라고 부르는 것은 나이 차이를 존중하는 한국 문화의 표현. 팬들 사이에서도 영어권 팬이 그대로 "hyung"이라는 단어를 사용할 만큼 보편화됨.',
+    content: 'FromSoftware가 2022년 출시한 오픈월드 액션 RPG. 극도로 높은 난이도로 유명한 "소울라이크" 장르의 대표작. 진이 월드투어 대기 시간에 100시간 넘게 플레이했다고 밝혀 팬들 사이에서 화제가 됨.',
   },
 };
 
 const SPEAKER_COLORS = {
-  'RM':       '#7B8CFF',
-  'Jin':      '#FF7EB3',
-  'Suga':     '#FFB347',
-  'j-hope':   '#FFE066',
-  'Jimin':    '#FF6B6B',
-  'V':        '#4ECDC4',
-  'Jungkook': '#5BC8FF',
+  'RM': '#7B8CFF', 'Jin': '#FF7EB3', 'Suga': '#FFB347',
+  'j-hope': '#FFE066', 'Jimin': '#FF6B6B', 'V': '#4ECDC4', 'Jungkook': '#5BC8FF',
 };
 
 const LANG_FLAGS = {
@@ -143,54 +128,93 @@ const LANG_FLAGS = {
   'hu':'🇭🇺','ro':'🇷🇴','uk':'🇺🇦','he':'🇮🇱','fa':'🇮🇷',
 };
 
-// ── DOM 참조 ──
-const startBtn            = document.getElementById('startBtn');
-const resetBtn            = document.getElementById('resetBtn');
-const subtitleHistory     = document.getElementById('subtitleHistory');
-const subtitleArea        = document.getElementById('subtitleArea');
-const scrollToTopBtn      = document.getElementById('scrollToTopBtn');
-const langSelect          = document.getElementById('langSelect');
-const infoBtn             = document.getElementById('infoBtn');
-const infoPanel           = document.getElementById('infoPanel');
-const infoBtnFlag         = document.getElementById('infoBtnFlag');
-const currentSubtitleText = document.getElementById('currentSubtitleText');
+// ── DOM ──
+const startBtn              = document.getElementById('startBtn');
+const resetBtn              = document.getElementById('resetBtn');
+const subtitleHistory       = document.getElementById('subtitleHistory');
+const subtitleArea          = document.getElementById('subtitleArea');
+const scrollToBottomBtn     = document.getElementById('scrollToBottomBtn');
+const langSelect            = document.getElementById('langSelect');
+const infoBtn               = document.getElementById('infoBtn');
+const infoPanel             = document.getElementById('infoPanel');
+const infoBtnFlag           = document.getElementById('infoBtnFlag');
+const currentSubtitlePanel  = document.getElementById('currentSubtitlePanel');
+const currentSubtitleLines  = document.getElementById('currentSubtitleLines');
+const resizeHandle          = document.getElementById('resizeHandle');
+const contextCardContainer  = document.getElementById('contextCardContainer');
+const contextCardInner      = document.getElementById('contextCardInner');
 
 // ── 정보 패널 토글 ──
 infoBtn.addEventListener('click', () => {
   const isOpen = infoPanel.classList.toggle('open');
   infoBtn.classList.toggle('open', isOpen);
-  infoBtn.setAttribute('aria-expanded', isOpen);
 });
 
 // ── 언어 변경 ──
 let currentLang = 'en';
-let needsFullRerender = false;
 
 langSelect.addEventListener('change', () => {
   currentLang = langSelect.value;
   infoBtnFlag.textContent = LANG_FLAGS[currentLang] || '🌐';
-  needsFullRerender = true;
-  renderCurrent(history.length > 0 ? history[history.length - 1] : null);
-  renderHistoryPanel();
-  needsFullRerender = false;
+  rerenderAll();
 });
+
+// ── 현재 패널 리사이즈 ──
+let currentHeaderH = 92;
+const MIN_H = 72;
+const MAX_H = 215;
+
+let isResizing = false;
+let resizeStartY = 0;
+let resizeStartH = 92;
+let lastVisibleCount = 1;
+
+resizeHandle.addEventListener('touchstart', (e) => {
+  isResizing = true;
+  resizeStartY = e.touches[0].clientY;
+  resizeStartH = currentHeaderH;
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchmove', (e) => {
+  if (!isResizing) return;
+  const delta = e.touches[0].clientY - resizeStartY;
+  currentHeaderH = Math.max(MIN_H, Math.min(MAX_H, resizeStartH + delta));
+  currentSubtitlePanel.style.height = currentHeaderH + 'px';
+
+  const newCount = getVisibleCount();
+  renderCurrentPanel();
+  if (newCount !== lastVisibleCount) {
+    lastVisibleCount = newCount;
+    rerenderHistory();
+  }
+  e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchend', () => { isResizing = false; });
+
+function getVisibleCount() {
+  if (currentHeaderH < 130) return 1;
+  if (currentHeaderH < 175) return 2;
+  return 3;
+}
 
 // ── 스크롤 감지 ──
 let isUserScrolled = false;
 
 subtitleArea.addEventListener('scroll', () => {
-  const atTop = subtitleArea.scrollTop <= 20;
-  isUserScrolled = !atTop;
-  scrollToTopBtn.classList.toggle('visible', isUserScrolled);
+  const atBottom = subtitleArea.scrollTop >= subtitleArea.scrollHeight - subtitleArea.clientHeight - 20;
+  isUserScrolled = !atBottom;
+  scrollToBottomBtn.classList.toggle('visible', isUserScrolled);
 });
 
-scrollToTopBtn.addEventListener('click', () => {
-  subtitleArea.scrollTop = 0;
+scrollToBottomBtn.addEventListener('click', () => {
+  subtitleArea.scrollTop = subtitleArea.scrollHeight;
   isUserScrolled = false;
-  scrollToTopBtn.classList.remove('visible');
+  scrollToBottomBtn.classList.remove('visible');
 });
 
-// ── 재생 상태 ──
+// ── 재생 ──
 let startTime     = null;
 let timerInterval = null;
 let isRunning     = false;
@@ -200,7 +224,6 @@ startBtn.addEventListener('click', () => {
   if (!isRunning) startSubtitles();
   else stopSubtitles();
 });
-
 resetBtn.addEventListener('click', clearSubtitles);
 
 function startSubtitles() {
@@ -211,10 +234,8 @@ function startSubtitles() {
   timerInterval = setInterval(() => {
     const elapsed = (Date.now() - startTime) / 1000;
     updateSubtitle(elapsed);
-    if (subtitles.length > 0) {
-      const last = subtitles[subtitles.length - 1];
-      if (elapsed > last.end + 1) stopSubtitles();
-    }
+    const last = subtitles[subtitles.length - 1];
+    if (elapsed > last.end + 1) stopSubtitles();
   }, 80);
 }
 
@@ -230,19 +251,20 @@ function stopSubtitles() {
 function clearSubtitles() {
   history = [];
   lastSubtitleStart = -1;
+  historyRenderedUpTo = -1;
   pausedAt = 0;
   isUserScrolled = false;
   subtitleHistory.innerHTML = '';
-  currentSubtitleText.innerHTML = '';
-  scrollToTopBtn.classList.remove('visible');
-  activeContextKey = null;
+  currentSubtitleLines.innerHTML = '';
+  scrollToBottomBtn.classList.remove('visible');
+  hideContext();
 }
 
 // ── 자막 히스토리 ──
-const MAX_HISTORY = 20;
+const MAX_HISTORY = 60;
 let history = [];
 let lastSubtitleStart = -1;
-let activeContextKey = null;
+let historyRenderedUpTo = -1; // history 배열에서 히스토리 패널에 마지막으로 렌더한 인덱스
 
 function updateSubtitle(elapsed) {
   const current = subtitles.find(s => elapsed >= s.start && elapsed < s.end);
@@ -250,164 +272,102 @@ function updateSubtitle(elapsed) {
   if (current.start === lastSubtitleStart) return;
   lastSubtitleStart = current.start;
   history.push(current);
-  if (history.length > MAX_HISTORY) history.shift();
-  renderCurrent(current);
-  renderHistoryPanel();
+  renderCurrentPanel();
+  appendNewHistoryItems();
 }
 
-// ── 텍스트에서 어노테이션 키워드를 하이라이트 span으로 변환 ──
+// ── 텍스트에 어노테이션 하이라이트 적용 ──
 function buildAnnotatedHtml(text) {
   let result = escapeHtml(text);
   Object.keys(ANNOTATIONS).forEach(keyword => {
-    const color = ANNOTATIONS[keyword].color;
+    const ann = ANNOTATIONS[keyword];
     const escaped = escapeHtml(keyword);
-    const regex = new RegExp(escaped, 'g');
-    result = result.replace(regex,
-      `<span class="annotated-word" data-key="${escaped}" style="color:${color};border-bottom:1.5px solid ${color}40;cursor:pointer">${escaped}</span>`
+    result = result.replace(
+      new RegExp(escaped, 'g'),
+      `<span class="annotated-word" data-key="${escaped}" style="color:${ann.color};text-decoration-color:${ann.color}60">${escaped}</span>`
     );
   });
   return result;
 }
 
-// ── 최신 자막 패널 업데이트 ──
-function renderCurrent(item) {
-  if (!item) { currentSubtitleText.innerHTML = ''; return; }
-  const text = item[currentLang] || item.en || '';
-  const speaker = item.speaker || '';
-  let html = '';
-  if (speaker) {
-    const color = SPEAKER_COLORS[speaker] || '#aaa';
-    html += `<span class="current-speaker" style="color:${color}">${escapeHtml(speaker)}</span> `;
-  }
-  html += buildAnnotatedHtml(text);
-
-  currentSubtitleText.style.opacity = '0';
-  currentSubtitleText.innerHTML = html;
-
-  // 어노테이션 클릭 이벤트 바인딩
-  currentSubtitleText.querySelectorAll('.annotated-word').forEach(el => {
-    el.addEventListener('click', () => showContext(el.dataset.key));
-  });
-
-  requestAnimationFrame(() => {
-    currentSubtitleText.style.transition = 'opacity 0.2s ease-out';
-    currentSubtitleText.style.opacity = '1';
+function bindAnnotationClicks(el) {
+  el.querySelectorAll('.annotated-word').forEach(span => {
+    span.addEventListener('click', () => showContext(span.dataset.key));
   });
 }
 
-// ── 문화맥락 해설 카드 표시 (FLIP으로 히스토리 아래로 밀기) ──
-function showContext(key) {
-  if (activeContextKey === key) {
-    removeContextCard();
-    return;
-  }
-  removeContextCard();
-  activeContextKey = key;
+// ── 최신 자막 패널 렌더 ──
+function renderCurrentPanel() {
+  const count = getVisibleCount();
+  const items = history.slice(-count);
+  currentSubtitleLines.innerHTML = '';
+  items.forEach((item, i) => {
+    const isLatest = i === items.length - 1;
+    const p = document.createElement('p');
+    p.className = isLatest ? 'current-line' : 'current-line current-line-prev';
 
-  const annotation = ANNOTATIONS[key];
-  if (!annotation) return;
-
-  const existingEls = [...subtitleHistory.children];
-  const firstTops = existingEls.map(el => el.getBoundingClientRect().top);
-
-  const card = document.createElement('div');
-  card.className = 'context-card';
-  card.dataset.contextKey = key;
-  card.innerHTML = `
-    <div class="context-card-header">
-      <span class="context-card-title" style="color:${annotation.color}">${escapeHtml(annotation.title)}</span>
-      <button class="context-card-close" aria-label="닫기">✕</button>
-    </div>
-    <p class="context-card-body">${escapeHtml(annotation.content)}</p>
-  `;
-  card.style.opacity = '0';
-  subtitleHistory.insertBefore(card, subtitleHistory.firstChild);
-
-  card.querySelector('.context-card-close').addEventListener('click', removeContextCard);
-
-  // FLIP 슬라이드 다운
-  const lastTops = existingEls.map(el =>
-    el.parentElement ? el.getBoundingClientRect().top : null
-  );
-  existingEls.forEach((el, i) => {
-    if (!el.parentElement || lastTops[i] === null) return;
-    const delta = firstTops[i] - lastTops[i];
-    if (Math.abs(delta) < 0.5) return;
-    el.style.transition = 'none';
-    el.style.transform = `translateY(${delta}px)`;
+    const text = item[currentLang] || item.en || '';
+    const speaker = item.speaker || '';
+    let html = '';
+    if (speaker) {
+      const color = SPEAKER_COLORS[speaker] || '#aaa';
+      html += `<span class="current-speaker" style="color:${color}">${escapeHtml(speaker)}</span> `;
+    }
+    html += buildAnnotatedHtml(text);
+    p.innerHTML = html;
+    bindAnnotationClicks(p);
+    currentSubtitleLines.appendChild(p);
   });
+}
 
-  requestAnimationFrame(() => {
+// ── 히스토리 패널: 새 항목만 하단에 추가 ──
+function appendNewHistoryItems() {
+  const count = getVisibleCount();
+  // history[0 .. length-count-1] 이 히스토리 패널에 표시되어야 함
+  const historyEndIndex = history.length - count - 1;
+
+  for (let i = historyRenderedUpTo + 1; i <= historyEndIndex; i++) {
+    if (i < 0) continue;
+    const item = history[i];
+    const showSpeaker = i === 0 || history[i].speaker !== history[i - 1].speaker;
+    const p = createHistoryEl(item, showSpeaker);
+    p.style.opacity = '0';
+    subtitleHistory.appendChild(p);
     requestAnimationFrame(() => {
-      existingEls.forEach(el => {
-        if (!el.parentElement) return;
-        el.style.transition = 'transform 0.35s ease-out';
-        el.style.transform = '';
-      });
-      card.style.transition = 'opacity 0.25s ease-out';
-      card.style.opacity = '1';
+      p.style.transition = 'opacity 0.25s ease-out';
+      p.style.opacity = '1';
     });
-  });
+    historyRenderedUpTo = i;
+  }
 
-  setTimeout(() => {
-    existingEls.forEach(el => {
-      if (!el.parentElement) return;
-      el.style.transition = '';
-      el.style.transform = '';
-    });
-  }, 400);
+  if (!isUserScrolled) {
+    subtitleArea.scrollTop = subtitleArea.scrollHeight;
+  }
 }
 
-function removeContextCard() {
-  activeContextKey = null;
-  const existing = subtitleHistory.querySelector('.context-card');
-  if (!existing) return;
-
-  const existingEls = [...subtitleHistory.children].filter(el => el !== existing);
-  const firstTops = existingEls.map(el => el.getBoundingClientRect().top);
-
-  existing.remove();
-
-  const lastTops = existingEls.map(el =>
-    el.parentElement ? el.getBoundingClientRect().top : null
-  );
-  existingEls.forEach((el, i) => {
-    if (!el.parentElement || lastTops[i] === null) return;
-    const delta = firstTops[i] - lastTops[i];
-    if (Math.abs(delta) < 0.5) return;
-    el.style.transition = 'none';
-    el.style.transform = `translateY(${delta}px)`;
-  });
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      existingEls.forEach(el => {
-        if (!el.parentElement) return;
-        el.style.transition = 'transform 0.3s ease-out';
-        el.style.transform = '';
-      });
-    });
-  });
-
-  setTimeout(() => {
-    existingEls.forEach(el => {
-      if (!el.parentElement) return;
-      el.style.transition = '';
-      el.style.transform = '';
-    });
-  }, 350);
+// ── 히스토리 전체 재렌더 (언어 변경 또는 count 변경 시) ──
+function rerenderHistory() {
+  subtitleHistory.innerHTML = '';
+  historyRenderedUpTo = -1;
+  const count = getVisibleCount();
+  const historyEndIndex = history.length - count - 1;
+  for (let i = 0; i <= historyEndIndex; i++) {
+    const item = history[i];
+    const showSpeaker = i === 0 || history[i].speaker !== history[i - 1].speaker;
+    subtitleHistory.appendChild(createHistoryEl(item, showSpeaker));
+    historyRenderedUpTo = i;
+  }
+  if (!isUserScrolled) subtitleArea.scrollTop = subtitleArea.scrollHeight;
 }
 
-// ── 히스토리 패널 렌더링 (최신-1부터 역순) ──
-function getLineClass(i) {
-  if (i === 0) return 'subtitle-line prev-1';
-  if (i <= 3)  return 'subtitle-line prev-2';
-  return 'subtitle-line';
+function rerenderAll() {
+  renderCurrentPanel();
+  rerenderHistory();
 }
 
-function createSubtitleEl(item, posIndex, showSpeaker) {
+function createHistoryEl(item, showSpeaker) {
   const p = document.createElement('p');
-  p.className = getLineClass(posIndex);
+  p.className = 'history-line';
   const text = item[currentLang] || item.en || '';
   const speaker = item.speaker || '';
   let html = '';
@@ -417,98 +377,38 @@ function createSubtitleEl(item, posIndex, showSpeaker) {
   }
   html += buildAnnotatedHtml(text);
   p.innerHTML = html;
-  p.querySelectorAll('.annotated-word').forEach(el => {
-    el.addEventListener('click', () => showContext(el.dataset.key));
-  });
+  bindAnnotationClicks(p);
   return p;
 }
 
-function renderHistoryPanel() {
-  // 최신 자막(history[last])은 current-panel에 표시 → 히스토리는 나머지
-  const prevItems = history.slice(0, -1);
-  const reversed  = [...prevItems].reverse();
+// ── 문화맥락 해설 카드 ──
+let activeContextKey = null;
 
-  const contextCard = subtitleHistory.querySelector('.context-card');
+function showContext(key) {
+  if (activeContextKey === key) { hideContext(); return; }
+  activeContextKey = key;
 
-  if (subtitleHistory.querySelectorAll('p').length === 0 || needsFullRerender) {
-    // 전체 재렌더링
-    subtitleHistory.innerHTML = '';
-    if (contextCard) subtitleHistory.appendChild(contextCard);
-    reversed.forEach((item, i) => {
-      const prevItem = i > 0 ? reversed[i - 1] : null;
-      const showSpeaker = !prevItem || prevItem.speaker !== item.speaker;
-      subtitleHistory.appendChild(createSubtitleEl(item, i, showSpeaker));
-    });
-    if (!isUserScrolled) subtitleArea.scrollTop = 0;
-    return;
-  }
+  const ann = ANNOTATIONS[key];
+  if (!ann) return;
 
-  if (prevItems.length === 0) return;
+  contextCardInner.innerHTML = `
+    <div class="context-card-header">
+      <span class="context-card-title" style="color:${ann.color}">${escapeHtml(ann.title)}</span>
+      <button class="context-card-close" id="contextClose">✕</button>
+    </div>
+    <p class="context-card-body">${escapeHtml(ann.content)}</p>
+  `;
+  document.getElementById('contextClose').addEventListener('click', hideContext);
+  contextCardContainer.classList.add('visible');
+}
 
-  // FLIP: 이전 "current"가 히스토리 맨 위로 내려옴
-  const newHistoryItem = prevItems[prevItems.length - 1];
-  const existingEls = [...subtitleHistory.querySelectorAll('p')];
-  const firstTops = existingEls.map(el => el.getBoundingClientRect().top);
-
-  const prevHistoryItem = prevItems.length >= 2 ? prevItems[prevItems.length - 2] : null;
-  const showSpeaker = !prevHistoryItem || prevHistoryItem.speaker !== newHistoryItem.speaker;
-  const newEl = createSubtitleEl(newHistoryItem, 0, showSpeaker);
-  newEl.style.opacity = '0';
-
-  // context card 바로 뒤 (또는 맨 앞)에 삽입
-  const insertRef = contextCard ? contextCard.nextSibling : subtitleHistory.firstChild;
-  subtitleHistory.insertBefore(newEl, insertRef);
-
-  existingEls.forEach((el, i) => {
-    el.className = getLineClass(i + 1);
-  });
-
-  // MAX_HISTORY 초과 제거
-  const allPs = [...subtitleHistory.querySelectorAll('p')];
-  while (allPs.length > MAX_HISTORY) {
-    subtitleHistory.removeChild(allPs[allPs.length - 1]);
-    allPs.pop();
-  }
-
-  // FLIP Play
-  const lastTops = existingEls.map(el =>
-    el.parentElement ? el.getBoundingClientRect().top : null
-  );
-  existingEls.forEach((el, i) => {
-    if (!el.parentElement || lastTops[i] === null) return;
-    const delta = firstTops[i] - lastTops[i];
-    if (Math.abs(delta) < 0.5) return;
-    el.style.transition = 'none';
-    el.style.transform = `translateY(${delta}px)`;
-  });
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      existingEls.forEach(el => {
-        if (!el.parentElement) return;
-        el.style.transition = 'transform 0.35s ease-out';
-        el.style.transform = '';
-      });
-      newEl.style.transition = 'opacity 0.3s ease-out';
-      newEl.style.opacity = '1';
-    });
-  });
-
-  setTimeout(() => {
-    existingEls.forEach(el => {
-      if (!el.parentElement) return;
-      el.style.transition = '';
-      el.style.transform = '';
-    });
-  }, 400);
-
-  if (!isUserScrolled) subtitleArea.scrollTop = 0;
+function hideContext() {
+  activeContextKey = null;
+  contextCardContainer.classList.remove('visible');
 }
 
 function escapeHtml(str) {
   return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

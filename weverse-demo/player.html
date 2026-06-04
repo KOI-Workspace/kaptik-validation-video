@@ -8,16 +8,16 @@
 </head>
 <body>
 
-  <!-- 상단: 뒤로가기 + 정보/언어 토글 버튼 -->
+  <!-- 상단: 뒤로가기 + 정보/언어 토글 -->
   <div class="top-controls">
     <a href="index.html" class="back-btn" aria-label="뒤로가기">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
     </a>
-    <button class="info-btn" id="infoBtn" aria-expanded="false">
+    <button class="info-btn" id="infoBtn">
       <span class="info-btn-flag" id="infoBtnFlag">🇺🇸</span>
       <span class="info-btn-title">자려고 누웠는데 갑자기</span>
       <svg class="info-chevron" id="infoChevron" width="12" height="7" viewBox="0 0 12 7" fill="none">
-        <polyline points="1 1 6 6 11 1" stroke="rgba(255,255,255,0.45)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="1 1 6 6 11 1" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </button>
   </div>
@@ -65,18 +65,26 @@
     </div>
   </div>
 
-  <!-- 최신 자막 패널 (크게) -->
+  <!-- 최신 자막 패널 (드래그로 늘릴 수 있음) -->
   <div class="current-subtitle-panel" id="currentSubtitlePanel">
-    <p class="current-subtitle-text" id="currentSubtitleText"></p>
+    <div class="current-subtitle-lines" id="currentSubtitleLines"></div>
+    <div class="resize-handle" id="resizeHandle">
+      <div class="resize-pill"></div>
+    </div>
   </div>
 
-  <!-- 이전 자막 히스토리 -->
+  <!-- 문화맥락 해설 카드 (최신 자막 패널 바로 아래) -->
+  <div class="context-card-container" id="contextCardContainer">
+    <div class="context-card-inner" id="contextCardInner"></div>
+  </div>
+
+  <!-- 자막 히스토리 (크로놀로지컬, 아래로 쌓임) -->
   <div class="subtitle-area" id="subtitleArea">
     <div class="subtitle-history" id="subtitleHistory"></div>
   </div>
 
   <!-- 최신 자막으로 이동 플로팅 버튼 -->
-  <button class="scroll-to-top-btn" id="scrollToTopBtn" aria-label="최신 자막으로 이동">↑</button>
+  <button class="scroll-to-bottom-btn" id="scrollToBottomBtn" aria-label="최신 자막으로 이동">↓</button>
 
   <!-- 컨트롤 바 -->
   <div class="control-bar" id="controlBar">
