@@ -289,6 +289,16 @@ const SPEAKER_INITIALS = {
   'j-hope': 'JH', 'Jimin': 'JM', 'V': 'V', 'Jungkook': 'JK',
 };
 
+const SPEAKER_IMAGES = {
+  'RM':       'public/images/RM 프로필.jpeg',
+  'Jin':      'public/images/진 프로필.jpeg',
+  'Suga':     'public/images/슈가 프로필.webp',
+  'j-hope':   'public/images/제이홉 프로필.jpeg',
+  'Jimin':    'public/images/지민 프로필.jpg',
+  'V':        'public/images/뷔 프로필.jpg',
+  'Jungkook': 'public/images/정국 프로필.jpeg',
+};
+
 // ── DOM ──
 const startBtn         = document.getElementById('startBtn');
 const resetBtn         = document.getElementById('resetBtn');
@@ -511,10 +521,25 @@ function createSubtitleEl(item) {
   // 아바타
   const avatar = document.createElement('div');
   avatar.className = 'subtitle-avatar';
-  avatar.textContent = initials;
-  avatar.style.background = color + '22'; // ~13% 투명도
   avatar.style.border = `1.5px solid ${color}55`;
-  avatar.style.color  = color;
+
+  const imgSrc = SPEAKER_IMAGES[speaker];
+  if (imgSrc) {
+    const img = document.createElement('img');
+    img.src = imgSrc;
+    img.alt = speaker;
+    img.onerror = () => {
+      img.remove();
+      avatar.textContent = initials;
+      avatar.style.background = color + '22';
+      avatar.style.color = color;
+    };
+    avatar.appendChild(img);
+  } else {
+    avatar.textContent = initials;
+    avatar.style.background = color + '22';
+    avatar.style.color = color;
+  }
 
   // 본문 (이름 + 텍스트)
   const body = document.createElement('div');
