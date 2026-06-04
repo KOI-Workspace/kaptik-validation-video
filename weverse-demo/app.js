@@ -79,7 +79,6 @@ const SPEAKER_INITIALS = {
 const startBtn         = document.getElementById('startBtn');
 const resetBtn         = document.getElementById('resetBtn');
 const sheet            = document.getElementById('sheet');
-const sheetHandle      = document.getElementById('sheetHandle');
 const sheetContent     = document.getElementById('sheetContent');
 const scrollToTopBtn   = document.getElementById('scrollToTopBtn');
 const langFab          = document.getElementById('langFab');
@@ -111,12 +110,20 @@ function applySheetTop(top, animate = false) {
 let isDragging   = false;
 let dragStartY   = 0;
 let dragStartTop = 0;
+const DRAG_ZONE  = 70; // 시트 상단 70px 터치 → 시트 이동
 
-sheetHandle.addEventListener('touchstart', (e) => {
-  isDragging   = true;
-  dragStartY   = e.touches[0].clientY;
-  dragStartTop = sheetTop;
-  e.preventDefault();
+// sheetContent 상단 70px 터치 시 시트 드래그
+sheetContent.addEventListener('touchstart', (e) => {
+  const sheetRect = sheet.getBoundingClientRect();
+  const relY = e.touches[0].clientY - sheetRect.top;
+  if (relY < DRAG_ZONE) {
+    isDragging   = true;
+    dragStartY   = e.touches[0].clientY;
+    dragStartTop = sheetTop;
+    e.preventDefault(); // 해당 영역에서 스크롤 방지
+  } else {
+    isDragging = false;
+  }
 }, { passive: false });
 
 document.addEventListener('touchmove', (e) => {
