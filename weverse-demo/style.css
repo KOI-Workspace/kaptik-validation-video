@@ -113,7 +113,12 @@ body {
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
-  text-decoration-thickness: 1px;
+  text-decoration-thickness: 1.5px;
+  font-weight: 600;
+  transition: opacity 0.2s ease;
+}
+.annotated-word:active {
+  opacity: 0.8;
 }
 
 /* ── 문화맥락 해설 오버레이 (시트 상단) ── */

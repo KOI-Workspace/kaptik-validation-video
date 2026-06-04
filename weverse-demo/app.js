@@ -184,12 +184,12 @@ const subtitles = [
 
 const ANNOTATIONS = {
   '이상': {
-    color: '#FFE066',
+    color: '#A78BFA',
     title: '이상하다의 중의성 (Homophone Pun)',
     content: '"이상하다"(iseunghada)는 "weird" 또는 "strange"를 의미하지만, 발음이 치아/입의 문제처럼 들린다. J-Hope가 Jin의 인사가 "이상했다"(weird)고 하자, Jin은 즉시 "이상하면 치과가야 되는 거 아니야?"(If something\'s wrong with your teeth, shouldn\'t you go to the dentist?)라며 치과 드립으로 반응해 미묘한 어색함을 재미있는 아빠 개그로 변환한다.',
   },
   '이맘때': {
-    color: '#4ECDC4',
+    color: '#A78BFA',
     title: '겨울 시즌 = 군 기초훈련 시즌',
     content: '40km 행군은 보통 1월경 기초훈련 시즌에 실시된다. V가 "이맘때쯤"이라고 말하자 모두가 즉시 군대 추억을 떠올린다. 한국 남성들에게 겨울은 군 복무라는 불가피한 현실을 상징한다.',
   },
