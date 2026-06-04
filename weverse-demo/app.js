@@ -193,6 +193,16 @@ const ANNOTATIONS = {
     title: '겨울 시즌 = 군 기초훈련 시즌',
     content: '40km 행군은 보통 1월경 기초훈련 시즌에 실시된다. V가 "이맘때쯤"이라고 말하자 모두가 즉시 군대 추억을 떠올린다. 한국 남성들에게 겨울은 군 복무라는 불가피한 현실을 상징한다.',
   },
+  'weird': {
+    color: '#A78BFA',
+    title: 'Pun on "weird" (이상하다)',
+    content: '"Weird" translates to "이상하다" in Korean, which also sounds like a dental issue. When J-Hope calls Jin\'s greeting "weird," Jin immediately cracks a dad joke about going to the dentist, turning an awkward moment into comedy.',
+  },
+  'this time of year': {
+    color: '#A78BFA',
+    title: 'Winter = Military Training Season',
+    content: 'The 40-kilometer march typically happens around January during basic military training. When V says "this time of year," it instantly brings up military memories. For Korean men, winter symbolizes military service—an unavoidable rite of passage.',
+  },
   '아리랑': {
     color: '#A78BFA',
     title: '아리랑',
