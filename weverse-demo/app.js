@@ -102,7 +102,7 @@ function applySheetTop(top, animate = false) {
   sheetTop = Math.max(MIN_TOP, Math.min(MAX_TOP(), top));
   if (animate) sheet.classList.add('animating');
   sheet.style.top = sheetTop + 'px';
-  contextOverlay.style.top = (sheetTop + 36) + 'px'; // handle height = 36px
+  contextOverlay.style.top = (sheetTop + 14) + 'px'; // handle height = 14px
   if (animate) {
     setTimeout(() => sheet.classList.remove('animating'), 340);
   }

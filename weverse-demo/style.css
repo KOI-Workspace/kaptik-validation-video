@@ -47,22 +47,12 @@ body {
   transition: top 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 드래그 핸들 */
+/* 드래그 핸들 (투명, 라운드 코너만으로 시트 암시) */
 .sheet-handle {
-  height: 36px;
+  height: 14px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   touch-action: none;
   cursor: grab;
-}
-
-.drag-pill {
-  width: 36px;
-  height: 3px;
-  background: rgba(255,255,255,0.2);
-  border-radius: var(--r-pill);
 }
 
 /* 자막 콘텐츠 영역 */
