@@ -343,13 +343,7 @@ function appendNewHistoryItems() {
     const item        = history[i];
     const showSpeaker = i === 0 || history[i].speaker !== history[i - 1].speaker;
     const p = createHistoryEl(item, showSpeaker);
-    p.style.opacity = '0';
     subtitleHistory.appendChild(p);
-    // eslint-disable-next-line no-loop-func
-    requestAnimationFrame(() => {
-      p.style.transition = 'opacity 0.25s ease-out';
-      p.style.opacity    = '1';
-    });
     historyRenderedUpTo = i;
   }
 
