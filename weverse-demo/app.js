@@ -159,28 +159,51 @@ langSelect.addEventListener('change', () => {
 
 // ── 헤더 위치 + 높이 ──
 let headerTop    = 0;
-let headerHeight = 90;
+let headerHeight = 0; // 콘텐츠 기반 자동 계산
 const MIN_TOP    = 0;
 const MAX_TOP    = () => window.innerHeight * 0.55;
-const COLLAPSED_H = 90;
-const EXPANDED_H  = 250; // 5줄
 
 let isExpanded = false;
 
-function applyHeaderGeometry() {
-  headerPanel.style.top    = headerTop + 'px';
-  headerPanel.style.height = headerHeight + 'px';
+function measureAndApplyHeight(animate = false) {
+  // 콘텐츠 높이 기반으로 헤더 높이 계산
+  headerPanel.style.height = 'auto';
+  const naturalH = headerPanel.offsetHeight;
+
+  if (animate) {
+    const prevH = headerHeight || naturalH;
+    headerPanel.classList.add('animating');
+    headerPanel.style.height = prevH + 'px';
+    headerPanel.offsetHeight; // force reflow
+    headerPanel.style.height = naturalH + 'px';
+    subtitleArea.style.transition = 'top 0.32s cubic-bezier(0.4,0,0.2,1)';
+    subtitleArea.style.top = (headerTop + naturalH) + 'px';
+    setTimeout(() => {
+      headerPanel.classList.remove('animating');
+      headerPanel.style.height = 'auto';
+      subtitleArea.style.transition = '';
+      rerenderHistory();
+    }, 340);
+  } else {
+    subtitleArea.style.top = (headerTop + naturalH) + 'px';
+  }
+
+  headerHeight = naturalH;
+  contextCardContainer.style.top = (headerTop + naturalH) + 'px';
+}
+
+function applyHeaderPosition() {
+  headerPanel.style.top = headerTop + 'px';
+  subtitleArea.style.top = (headerTop + headerHeight) + 'px';
   contextCardContainer.style.top = (headerTop + headerHeight) + 'px';
 }
 
 // 확장/축소 토글
 expandToggleBtn.addEventListener('click', () => {
-  isExpanded   = !isExpanded;
-  headerHeight = isExpanded ? EXPANDED_H : COLLAPSED_H;
+  isExpanded = !isExpanded;
   headerPanel.classList.toggle('expanded', isExpanded);
-  applyHeaderGeometry();
   renderHeaderPanel();
-  rerenderHistory();
+  measureAndApplyHeight(true);
 });
 
 // 드래그로 위치 이동 (상단 drag bar)
@@ -192,8 +215,6 @@ headerDragBar.addEventListener('touchstart', (e) => {
   isMoveGrab   = true;
   moveStartY   = e.touches[0].clientY;
   moveStartTop = headerTop;
-  // 위치 이동 중에는 height transition 잠시 비활성화
-  headerPanel.style.transition = 'none';
   e.preventDefault();
 }, { passive: false });
 
@@ -201,19 +222,14 @@ document.addEventListener('touchmove', (e) => {
   if (!isMoveGrab) return;
   const delta = e.touches[0].clientY - moveStartY;
   headerTop = Math.max(MIN_TOP, Math.min(MAX_TOP(), moveStartTop + delta));
-  applyHeaderGeometry();
+  applyHeaderPosition();
   e.preventDefault();
 }, { passive: false });
 
-document.addEventListener('touchend', () => {
-  if (isMoveGrab) {
-    headerPanel.style.transition = '';
-  }
-  isMoveGrab = false;
-});
+document.addEventListener('touchend', () => { isMoveGrab = false; });
 
 function getVisibleCount() {
-  return isExpanded ? 5 : 1;
+  return isExpanded ? 3 : 1;
 }
 
 // ── 스크롤 ──
@@ -286,6 +302,7 @@ function updateSubtitle(elapsed) {
   lastSubtitleStart = current.start;
   history.push(current);
   renderHeaderPanel();
+  measureAndApplyHeight(false);
   appendNewHistoryItems();
 }
 
@@ -365,6 +382,7 @@ function rerenderHistory() {
 
 function rerenderAll() {
   renderHeaderPanel();
+  measureAndApplyHeight(false);
   rerenderHistory();
 }
 
@@ -415,4 +433,5 @@ function escapeHtml(str) {
 }
 
 // 초기 헤더 위치 적용
-applyHeaderGeometry();
+applyHeaderPosition();
+measureAndApplyHeight(false);
