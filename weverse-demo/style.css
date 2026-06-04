@@ -52,7 +52,6 @@ body {
 .sheet-content {
   flex: 1;
   overflow-y: auto;
-  overflow-anchor: none; /* 브라우저 자동 앵커링 비활성화 */
   scrollbar-width: none;
   -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
@@ -64,7 +63,7 @@ body {
 .subtitle-list {
   padding: 4px 20px 60px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   gap: 0;
 }
 
@@ -172,24 +171,28 @@ body {
   user-select: text;
 }
 
-/* ── 최신으로 이동 버튼 ── */
+/* ── 최신으로 이동 버튼 (시트 상단 중앙) ── */
 .scroll-to-top-btn {
   display: none;
-  position: fixed;
-  right: 16px;
-  bottom: calc(var(--control-h) + 126px);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(28,28,28,0.92);
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 30px;
+  padding: 0 14px;
+  border-radius: var(--r-pill);
+  background: rgba(40,40,40,0.95);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border);
   color: var(--text-1);
-  font-size: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font);
   cursor: pointer;
   align-items: center;
-  justify-content: center;
-  z-index: 300;
+  gap: 5px;
+  white-space: nowrap;
+  z-index: 210;
 }
 .scroll-to-top-btn.visible { display: flex; }
 

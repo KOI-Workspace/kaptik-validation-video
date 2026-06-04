@@ -279,42 +279,41 @@ function createSubtitleEl(item) {
   return wrapper;
 }
 
-// ── 최신 자막을 맨 위에 삽입 ──
+// ── 최신 자막 추가 (column-reverse: appendChild = 시각적 맨 위) ──
 function prependSubtitle(item) {
   const atTop = sheetContent.scrollTop <= 20;
   const existingEls = [...subtitleList.querySelectorAll('.subtitle-item')];
   const newEl = createSubtitleEl(item);
 
   if (!atTop) {
-    // 히스토리 읽는 중: 삽입 후 scrollTop 보정으로 화면 고정
-    const prevScrollTop = sheetContent.scrollTop;
-    subtitleList.insertBefore(newEl, subtitleList.firstChild);
-    sheetContent.scrollTop = prevScrollTop + newEl.getBoundingClientRect().height;
-
-    const allItems = subtitleList.querySelectorAll('.subtitle-item');
-    if (allItems.length > MAX_HISTORY) {
-      const removed = allItems[allItems.length - 1];
-      sheetContent.scrollTop -= removed.getBoundingClientRect().height;
-      subtitleList.removeChild(removed);
+    // 히스토리 읽는 중: appendChild + 브라우저 scroll anchor가 위치 유지
+    subtitleList.appendChild(newEl);
+    if (subtitleList.children.length > MAX_HISTORY) {
+      subtitleList.removeChild(subtitleList.firstChild);
     }
     return;
   }
 
-  // 최상단: FLIP 슬라이드 다운
-  newEl.style.opacity = '0';
-  subtitleList.insertBefore(newEl, subtitleList.firstChild);
+  // 최상단에서 보는 중: FLIP 슬라이드 다운
+  const firstTops = existingEls.map(el => el.getBoundingClientRect().top);
 
-  const allItems = subtitleList.querySelectorAll('.subtitle-item');
-  if (allItems.length > MAX_HISTORY) {
-    subtitleList.removeChild(allItems[allItems.length - 1]);
+  newEl.style.opacity = '0';
+  subtitleList.appendChild(newEl);
+
+  if (subtitleList.children.length > MAX_HISTORY) {
+    subtitleList.removeChild(subtitleList.firstChild);
   }
 
   if (existingEls.length > 0) {
-    const newElH = newEl.offsetHeight;
-    existingEls.forEach(el => {
-      if (!el.parentElement) return;
+    const lastTops = existingEls.map(el =>
+      el.parentElement ? el.getBoundingClientRect().top : null
+    );
+    existingEls.forEach((el, i) => {
+      if (!el.parentElement || lastTops[i] === null) return;
+      const delta = firstTops[i] - lastTops[i];
+      if (Math.abs(delta) < 0.5) return;
       el.style.transition = 'none';
-      el.style.transform  = `translateY(${-newElH}px)`;
+      el.style.transform  = `translateY(${delta}px)`;
     });
 
     requestAnimationFrame(() => {
@@ -324,7 +323,7 @@ function prependSubtitle(item) {
           el.style.transition = 'transform 0.32s ease-out';
           el.style.transform  = '';
         });
-        newEl.style.transition = 'opacity 0.2s ease-out 0.12s';
+        newEl.style.transition = 'opacity 0.2s ease-out 0.1s';
         newEl.style.opacity    = '1';
       });
     });
@@ -339,16 +338,13 @@ function prependSubtitle(item) {
   } else {
     newEl.style.opacity = '1';
   }
-
 }
 
 // ── 전체 재렌더 (언어 변경 시) ──
 function rerenderAll() {
   subtitleList.innerHTML = '';
-  [...history].reverse().forEach(item => {
-    const el = createSubtitleEl(item);
-    subtitleList.appendChild(el);
-  });
+  // column-reverse: 오래된 것 먼저 append → 시각적으로 최신이 맨 위
+  history.forEach(item => subtitleList.appendChild(createSubtitleEl(item)));
 }
 
 // ── 문화맥락 해설 ──
