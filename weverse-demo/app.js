@@ -336,9 +336,7 @@ function renderHeaderPanel() {
 
 // ── 히스토리 패널: 새 항목 하단에 추가 ──
 function appendNewHistoryItems() {
-  const count = getVisibleCount();
-  // 헤더에 표시 중인 항목은 히스토리에서 제외
-  const historyEndIndex = history.length - count - 1;
+  const historyEndIndex = history.length - 1;
 
   for (let i = historyRenderedUpTo + 1; i <= historyEndIndex; i++) {
     if (i < 0) continue;
@@ -363,8 +361,7 @@ function appendNewHistoryItems() {
 function rerenderHistory() {
   subtitleHistory.innerHTML  = '';
   historyRenderedUpTo        = -1;
-  const count           = getVisibleCount();
-  const historyEndIndex = history.length - count - 1;
+  const historyEndIndex = history.length - 1;
   for (let i = 0; i <= historyEndIndex; i++) {
     const item        = history[i];
     const showSpeaker = i === 0 || history[i].speaker !== history[i - 1].speaker;
