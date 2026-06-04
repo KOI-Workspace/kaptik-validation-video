@@ -79,7 +79,7 @@ const SPEAKER_INITIALS = {
 const startBtn         = document.getElementById('startBtn');
 const resetBtn         = document.getElementById('resetBtn');
 const sheet            = document.getElementById('sheet');
-const sheetHandle      = document.getElementById('sheetHandle'); // 외부 핸들
+const sheetHandle      = document.getElementById('sheetHandle');
 const sheetContent     = document.getElementById('sheetContent');
 const scrollToTopBtn   = document.getElementById('scrollToTopBtn');
 const langFab          = document.getElementById('langFab');
@@ -98,13 +98,10 @@ let sheetTop     = 80;
 const MIN_TOP    = 60;
 const MAX_TOP    = () => Math.round(window.innerHeight * 0.75);
 
-const HANDLE_H = 24; // 외부 핸들 높이
-
 function applySheetTop(top, animate = false) {
   sheetTop = Math.max(MIN_TOP, Math.min(MAX_TOP(), top));
   if (animate) sheet.classList.add('animating');
-  sheet.style.top        = sheetTop + 'px';
-  sheetHandle.style.top  = (sheetTop - HANDLE_H) + 'px'; // 시트 바로 위
+  sheet.style.top          = sheetTop + 'px';
   contextOverlay.style.top = sheetTop + 'px';
   if (animate) {
     setTimeout(() => sheet.classList.remove('animating'), 340);
