@@ -47,12 +47,27 @@ body {
   transition: top 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 드래그 핸들 (투명, 라운드 코너만으로 시트 암시) */
-.sheet-handle {
-  height: 14px;
-  flex-shrink: 0;
+/* 시트 외부 드래그 핸들 (시트 위에 플로팅) */
+.sheet-external-handle {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0; /* JS 제어 */
+  width: 80px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   touch-action: none;
   cursor: grab;
+  z-index: 201;
+}
+
+.drag-pill {
+  width: 40px;
+  height: 4px;
+  background: rgba(255,255,255,0.28);
+  border-radius: var(--r-pill);
 }
 
 /* 자막 콘텐츠 영역 */
