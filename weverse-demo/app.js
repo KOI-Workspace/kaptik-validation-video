@@ -640,8 +640,8 @@ function showContext(key, triggerSpan) {
   `;
   card.querySelector('.context-card-close').addEventListener('click', hideContext);
 
-  // column-reverse 레이아웃: DOM 기준 beforebegin = 시각적으로 바로 아래
-  subtitleItem.insertAdjacentElement('beforebegin', card);
+  // subtitle-item 안에 자식으로 삽입 → 새 자막 추가 시 함께 이동
+  subtitleItem.appendChild(card);
   activeContextEl = card;
 
   requestAnimationFrame(() => requestAnimationFrame(() => card.classList.add('open')));
