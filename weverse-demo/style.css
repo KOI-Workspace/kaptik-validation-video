@@ -26,42 +26,75 @@ body {
   user-select: none;
 }
 
-/* ── 자막 히스토리 (헤더 아래부터, 하단 고정) ── */
-.subtitle-area {
+/* ── 바텀 시트 ── */
+.sheet {
   position: fixed;
-  top: 0; /* JS 제어 */
   left: 0;
   right: 0;
+  top: 45vh;          /* JS 제어 */
   bottom: var(--control-h);
+  background: rgba(8,8,8,0.97);
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  border-top: 1px solid var(--border-sub);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  will-change: top;
+}
+.sheet.animating {
+  transition: top 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 드래그 핸들 */
+.sheet-handle {
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  cursor: grab;
+}
+
+.drag-pill {
+  width: 36px;
+  height: 3px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--r-pill);
+}
+
+/* 자막 콘텐츠 영역 */
+.sheet-content {
+  flex: 1;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  z-index: 10;
   scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
   scroll-behavior: smooth;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
 }
-.subtitle-area::-webkit-scrollbar { display: none; }
+.sheet-content::-webkit-scrollbar { display: none; }
 
-.subtitle-history {
-  padding: 16px 22px 20px;
+/* 자막 리스트 (패딩으로 간격) */
+.subtitle-list {
+  padding: 6px 22px 60px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 
-.history-line {
-  font-size: 14px;
+/* 자막 아이템 — 모두 동일한 스타일 */
+.subtitle-item {
+  font-size: 16px;
   font-weight: 400;
   line-height: 1.6;
-  color: rgba(255,255,255,0.32);
-  transition: opacity 0.25s ease-out;
+  color: rgba(255,255,255,0.82);
+  letter-spacing: -0.005em;
 }
 
-.history-line .speaker {
-  font-weight: 500;
+.subtitle-item .speaker {
+  font-weight: 600;
 }
 
 .annotated-word {
@@ -71,118 +104,19 @@ body {
   text-decoration-thickness: 1px;
 }
 
-/* ── 헤더 패널 (플로팅) ── */
-.header-panel {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;       /* JS 제어 */
-  background: rgba(6,6,6,0.96);
-  border-bottom: 1px solid var(--border-sub);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 300;
-  display: flex;
-  flex-direction: column;
-  will-change: top, height;
-}
-/* 애니메이션 클래스 (expand/collapse 시에만 적용) */
-.header-panel.animating {
-  transition: height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 상단: 위치 이동 드래그 영역 */
-.header-drag-bar {
-  height: 36px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  touch-action: none;
-  cursor: grab;
-}
-
-.drag-pill {
-  width: 32px;
-  height: 3px;
-  background: rgba(255,255,255,0.18);
-  border-radius: var(--r-pill);
-}
-
-/* 자막 표시 영역 */
-.header-subtitle-lines {
-  padding: 4px 48px 12px 20px; /* 우측에 버튼 공간 확보 */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 7px;
-}
-
-.current-line {
-  font-size: 18px;
-  font-weight: 300;
-  line-height: 1.45;
-  color: var(--text-1);
-  letter-spacing: -0.01em;
-}
-
-.current-line-prev {
-  font-size: 15px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.45);
-}
-
-.current-line .current-speaker {
-  font-weight: 500;
-}
-
-/* 하단: 확장/축소 토글 버튼 */
-.expand-toggle-area {
-  height: 28px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.expand-toggle-btn {
-  position: absolute;
-  right: 12px;
-  bottom: 8px;
-  background: none;
-  border: none;
-  color: rgba(255,255,255,0.28);
-  cursor: pointer;
-  padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  touch-action: manipulation;
-  transition: color 0.2s;
-}
-.expand-toggle-btn:active { color: rgba(255,255,255,0.7); }
-
-.icon-collapse { display: none; }
-.header-panel.expanded .icon-expand   { display: none; }
-.header-panel.expanded .icon-collapse { display: block; }
-
-/* 하단 토글 영역 제거 (drag bar로 이동) */
-.expand-toggle-area { display: none; }
-
-/* ── 문화맥락 해설 카드 (헤더 아래 따라다님) ── */
-.context-card-container {
+/* ── 문화맥락 해설 오버레이 (시트 상단) ── */
+.context-overlay {
   position: fixed;
   left: 12px;
   right: 12px;
-  top: 110px; /* JS 제어 */
-  z-index: 290;
+  top: 45vh; /* JS 제어 (시트 handle 아래) */
+  z-index: 250;
   max-height: 0;
   overflow: hidden;
   opacity: 0;
   transition: max-height 0.35s ease-out, opacity 0.25s ease-out;
 }
-.context-card-container.visible {
+.context-overlay.visible {
   max-height: 200px;
   opacity: 1;
 }
@@ -190,7 +124,7 @@ body {
 .context-card-inner {
   margin-top: 6px;
   padding: 14px 16px;
-  background: rgba(16,10,32,0.97);
+  background: rgba(16,10,32,0.98);
   border: 1px solid rgba(131,83,235,0.35);
   border-radius: 14px;
   backdrop-filter: blur(12px);
@@ -215,18 +149,38 @@ body {
   font-size: 13px;
   cursor: pointer;
   padding: 0;
-  line-height: 1;
 }
 
 .context-card-body {
   font-size: 13px;
   font-weight: 400;
   line-height: 1.65;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255,255,255,0.72);
   user-select: text;
 }
 
-/* ── 플로팅 버튼 그룹 (세로 정렬) ── */
+/* ── 최신으로 이동 버튼 ── */
+.scroll-to-top-btn {
+  display: none;
+  position: fixed;
+  right: 16px;
+  bottom: calc(var(--control-h) + 126px);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(28,28,28,0.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  color: var(--text-1);
+  font-size: 18px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+}
+.scroll-to-top-btn.visible { display: flex; }
+
+/* ── FAB 그룹 (세로 정렬) ── */
 .fab-group {
   position: fixed;
   right: 16px;
@@ -235,50 +189,49 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  z-index: 200;
-}
-
-.exit-fab {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: rgba(22,22,22,0.88);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(12px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(255,255,255,0.7);
-  text-decoration: none;
+  z-index: 300;
 }
 
 .lang-fab {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(22,22,22,0.88);
+  background: rgba(22,22,22,0.9);
   border: 1px solid var(--border);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 22px;
-  line-height: 1;
+  color: rgba(255,255,255,0.75);
+}
+
+.exit-fab {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(22,22,22,0.9);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
 }
 
 /* ── 언어/정보 팝업 ── */
 .lang-panel {
   position: fixed;
   right: 14px;
-  bottom: calc(var(--control-h) + 116px);
+  bottom: calc(var(--control-h) + 118px);
   width: 220px;
   background: rgba(16,16,16,0.97);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 14px 14px 12px;
   backdrop-filter: blur(18px);
-  z-index: 200;
+  z-index: 400;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -302,7 +255,6 @@ body {
 }
 
 .lang-panel-meta { display: flex; align-items: center; gap: 7px; }
-
 .lang-panel-divider { height: 1px; background: var(--border-sub); }
 
 .live-chip {
@@ -353,27 +305,6 @@ body {
 }
 .lang-select option { background: #1a1a1a; color: var(--text-1); }
 
-/* ── 최신으로 이동 버튼 ── */
-.scroll-to-bottom-btn {
-  display: none;
-  position: fixed;
-  right: 16px;
-  bottom: calc(var(--control-h) + 122px);
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: rgba(28,28,28,0.92);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--border);
-  color: var(--text-1);
-  font-size: 18px;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-  z-index: 150;
-}
-.scroll-to-bottom-btn.visible { display: flex; }
-
 /* ── 컨트롤 바 ── */
 .control-bar {
   position: fixed;
@@ -399,7 +330,7 @@ body {
   font-weight: 600;
   font-family: var(--font);
   cursor: pointer;
-  transition: background 180ms ease-out, transform 120ms ease-out;
+  transition: background 180ms, transform 120ms;
 }
 .start-btn:active { transform: scale(0.97); }
 .start-btn.running { background: var(--notif); }
